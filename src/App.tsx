@@ -1,13 +1,13 @@
 /* eslint-disable react/jsx-no-comment-textnodes */
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
-import { degrees, PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import './App.css';
+import React, { ReactElement, useEffect, useRef, useState } from "react";
+import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import "./App.css";
 
 const App = (): ReactElement => {
-  const [uploadFile, setUploadFile] = useState('')
-  const [pdfDocs, setPdfDocs] = useState() as any
+  const [uploadFile, setUploadFile] = useState("");
+  const [pdfDocs, setPdfDocs] = useState() as any;
 
-  const ref = useRef('');
+  const ref = useRef("") as any;
 
   // useEffect(() => {
   //   if (ref.current !== null) {
@@ -18,48 +18,52 @@ const App = (): ReactElement => {
   //   }
   // }, [ref]);
 
-	const modifyPdf = async (): Promise<void> => {
-		// Fetch an existing PDF document
-		const url = 'https://pdf-lib.js.org/assets/with_update_sections.pdf';
-		// const url = `${uploadFile}`;
-		// const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
-		const existingPdfBytes = new ArrayBuffer(uploadFile.length)
+  const modifyPdf = async (): Promise<void> => {
+    // Fetch an existing PDF document
+    const url = "https://pdf-lib.js.org/assets/with_update_sections.pdf";
+    // const url = `${uploadFile}`;
+    // const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
+    const existingPdfBytes = new ArrayBuffer(uploadFile.length);
 
-		// Load a PDFDocument from the existing PDF bytes
-		const pdfDoc1 = await PDFDocument.load(existingPdfBytes);
+    // Load a PDFDocument from the existing PDF bytes
+    const pdfDoc1 = await PDFDocument.load(existingPdfBytes);
 
-		// Embed the Helvetica font
-		// const helveticaFont = await pdfDoc1.embedFont(StandardFonts.Helvetica);
-		const helveticaFont = await pdfDocs.embedFont(StandardFonts.Helvetica);
+    // Embed the Helvetica font
+    // const helveticaFont = await pdfDoc1.embedFont(StandardFonts.Helvetica);
+    const helveticaFont = await pdfDocs.embedFont(StandardFonts.Helvetica);
 
-		// Get the first page of the document
-		const pages = pdfDocs.getPages();
-		const firstPage = pages[0];
+    // Get the first page of the document
+    const pages = pdfDocs.getPages();
+    const firstPage = pages[0];
 
-		// Get the width and height of the first page
-		const { width, height } = firstPage.getSize();
+    // Get the width and height of the first page
+    const { width, height } = firstPage.getSize();
 
-		// Draw a string of text diagonally across the first page
-		firstPage.drawText('This text was added with JavaScript!', {
-			x: 5,
-			y: height / 2 + 300,
-			size: 50,
-			font: helveticaFont,
-			color: rgb(0.95, 0.1, 0.1),
-			rotate: degrees(-45),
-		});
+    // Draw a string of text diagonally across the first page
+    firstPage.drawText("This text was added with JavaScript!", {
+      x: 5,
+      y: height / 2 + 300,
+      size: 50,
+      font: helveticaFont,
+      color: rgb(0.95, 0.1, 0.1),
+      rotate: degrees(-45),
+    });
 
-		// Serialize the PDFDocument to bytes (a Uint8Array)
-		const pdfBytes = await pdfDoc1.save();
+    // Serialize the PDFDocument to bytes (a Uint8Array)
+    const pdfBytes = await pdfDoc1.save();
 
-		// Trigger the browser to download the PDF document
-		//@ts-ignore
-		window.download(pdfBytes, 'pdf-lib_modification_example.pdf', 'application/pdf');
-		// return pdfBytesSW
-	};
+    // Trigger the browser to download the PDF document
+    //@ts-ignore
+    window.download(
+      pdfBytes,
+      "pdf-lib_modification_example.pdf",
+      "application/pdf"
+    );
+    // return pdfBytesSW
+  };
 
   const handleFileSelected = (e: any) => {
-    const files: any = e.target.files[0]
+    const files: any = e.target.files[0];
     // const files: any = new ArrayBuffer(e.target.files)
     // const files: any = (e.target.files)
     const reader = new FileReader();
@@ -69,54 +73,59 @@ const App = (): ReactElement => {
       // setPdfDocs(pdfDoc)
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-		// Get the first page of the document
-		const pages = pdfDoc.getPages();
-		const pagescount = pdfDoc.getPages().length;
-    console.log(pagescount);
-    
-		const firstPage = pages[0];
+      // Get the first page of the document
+      const pages = pdfDoc.getPages();
+      const pagescount = pdfDoc.getPages().length;
+      console.log(pagescount);
 
-		// Get the width and height of the first page
-		const { width, height } = firstPage.getSize();
+      const firstPage = pages[0];
 
-		// Draw a string of text diagonally across the first page
-		firstPage.drawText('This text was added with JavaScript!', {
-			x: 5,
-			y: 20,
-			size: 20,
-			font: helveticaFont,
-			color: rgb(0.95, 0.1, 0.1),
-		});
+      // Get the width and height of the first page
+      const { width, height } = firstPage.getSize();
 
-		// Serialize the PDFDocument to bytes (a Uint8Array)
-		const pdfBytes = await pdfDoc.save();
+      // Draw a string of text diagonally across the first page
+      firstPage.drawText("This text was added with JavaScript!", {
+        x: 5,
+        y: 20,
+        size: 20,
+        font: helveticaFont,
+        color: rgb(0.95, 0.1, 0.1),
+      });
 
-		// Trigger the browser to download the PDF document
-		//@ts-ignore
-		window.download(pdfBytes, '1-1.pdf', 'application/pdf');
-		// return pdfBytesSW
+      // Serialize the PDFDocument to bytes (a Uint8Array)
+      const pdfBytes = await pdfDoc.save();
 
+      // Trigger the browser to download the PDF document
+      //@ts-ignore
+      window.download(pdfBytes, "1-1.pdf", "application/pdf");
+      // return pdfBytesSW
     };
     // setUploadFile(files.webkitRelativePath)
     // setUploadFile(files.saveAsBase64())
-  }
+  };
 
-
-	return (
-		<>
-			<div className="row App">
-				{/* <label htmlFor="myfile" className="label">
+  return (
+    <>
+      <div className="row App">
+        {/* <label htmlFor="myfile" className="label">
 					Выберите файлы
 				// eslint-disable-next-line react/jsx-no-comment-textnodes
 				</label> */}
-        {/* @ts-expect-error */}
-				<input type="file" ref={ref} onChange={handleFileSelected} accept="application/pdf" className="file" id="myfile" name="myfile" />
-				<button type="button" onClick={() => modifyPdf()}>
-					Confirm
-				</button>
-			</div>
-		</>
-	);
+        <input
+          type="file"
+          ref={ref}
+          onChange={handleFileSelected}
+          accept="application/pdf"
+          className="file"
+          id="myfile"
+          name="myfile"
+        />
+        <button type="button" onClick={() => modifyPdf()}>
+          Confirm
+        </button>
+      </div>
+    </>
+  );
 };
 
 export default App;

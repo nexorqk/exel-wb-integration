@@ -1,110 +1,72 @@
-import React, { ReactElement } from 'react';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import './App.css';
+import React, { ReactElement, useState, useEffect } from "react";
+import { PDFDocument, StandardFonts } from "pdf-lib";
+import "./App.css";
+import { resizePdfPages, wrapText, drawTextOnPages } from "./utils";
 
 const App = (): ReactElement => {
+  const [pdfFile, setPdfFile] = useState(null) as any;
+  const [font, setFont] = useState(null) as any;
+  const [pages, setPages] = useState(null) as any;
+  const [text, setText] = useState(null) as any;
 
-	const handleFileSelected = (e: any) => {
-		const files: any = e.target.files[0];
-		const reader = new FileReader();
-		reader.readAsArrayBuffer(files);
-		reader.onload = async () => {
-			const pdfDoc = await PDFDocument.load(reader.result as any);
+  useEffect(() => {
+    if (pdfFile) setPages(pdfFile.getPages());
+    if (font)
+      setText(
+        wrapText(
+          "This text was added with JavaScript textsadhsdfksdjf;dsjfd;slfjdslfkjl!",
+          100,
+          font,
+          6
+        )
+      );
+  }, [font, pdfFile]);
 
-			const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  // const pagescount = pdfFile.getPages().length;
 
-			// Get the first page of the document
-			const pages = pdfDoc.getPages();
-			const pagescount = pdfDoc.getPages().length;
-			console.log(pagescount);
+  const handleFileSelected = (e: any) => {
+    const files: any = e.target.files[0];
+    const reader = new FileReader();
 
-			const firstPage = pages[0];
+    reader.readAsArrayBuffer(files);
 
-			// Get the width and height of the first page
-			// const { width, height } = firstPage.getSize();
+    reader.onload = async () => {
+      const pdfDoc = await PDFDocument.load(reader.result as any);
+      await setPdfFile(pdfDoc);
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      await setFont(helveticaFont);
 
-			const pageSize = {
-				width: 192,
-				height: 200,
-			};
+      if (pages && text && font) {
+        resizePdfPages(pages);
 
-			const new_size = pageSize;
-			const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
-
-			pages.forEach((page) => {
-				const { width, height } = page.getMediaBox();
-				const size_ratio = Math.round((width / height) * 100);
-				// If ratio of original and new format are too different we can not simply scale (more that 1%)
-				if (Math.abs(new_size_ratio - size_ratio) > 1) {
-					// Change page size
-					page.setSize(new_size.width, new_size.height);
-					const scale_content = Math.min(new_size.width / width, new_size.height / height);
-					// Scale content
-					page.scaleContent(scale_content, scale_content);
-				} else {
-					page.scale(new_size.width / width, new_size.height / height);
-				}
-			});
-
-      const wrapText = (text: any, width: any, font: any, fontSize: any) => {
-        const words = text.split(' ');
-        let line = '';
-        let result = '';
-        for (let n = 0; n < words.length; n++) {
-          const testLine = line + words[n] + ' ';
-          const testWidth = font.widthOfTextAtSize(testLine, fontSize);
-          if (testWidth > width) {
-            result += line + '\n';
-            line = words[n] + ' ';
-          } else {
-            line = testLine;
-          }
-        }
-        result += line;
-        console.log(result);
-        
-        return result;
+        drawTextOnPages(pages, text, font);
       }
+      // Serialize the PDFDocument to bytes (a Uint8Array)
+      const pdfBytes = await pdfDoc.save();
 
-      const gettext = wrapText('This text was added with JavaScript textsadhsdfksdjf;dsjfd;slfjdslfkjl!', 100, helveticaFont, 6 )!
+      // Trigger the browser to download the PDF document
+      //@ts-ignore
+      window.download(pdfBytes, "1-1.pdf", "application/pdf");
+    };
+  };
 
-			// Draw a string of text diagonally across the first page
-			firstPage.drawText(gettext, {
-				x: 0,
-				y: 110,
-				size: 6,
-				font: helveticaFont,
-        lineHeight: 6,
-				color: rgb(0.95, 0.1, 0.1),
-			});
-
-			// Serialize the PDFDocument to bytes (a Uint8Array)
-			const pdfBytes = await pdfDoc.save();
-
-			// Trigger the browser to download the PDF document
-			//@ts-ignore
-			window.download(pdfBytes, '1-1.pdf', 'application/pdf');
-		};
-	};
-
-	return (
-		<>
-			<div className="row App">
-
-				<input
-					type="file"
-					onChange={handleFileSelected}
-					accept="application/pdf"
-					className="file"
-					id="myfile"
-					name="myfile"
-				/>
-				<button type="button" onClick={()=>{}}>
-					Confirm
-				</button>
-			</div>
-		</>
-	);
+  return (
+    <>
+      <div className="row App">
+        <input
+          type="file"
+          onChange={handleFileSelected}
+          accept="application/pdf"
+          className="file"
+          id="myfile"
+          name="myfile"
+        />
+        <button type="button" onClick={() => {}}>
+          Confirm
+        </button>
+      </div>
+    </>
+  );
 };
 
 export default App;

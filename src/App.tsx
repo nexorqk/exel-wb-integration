@@ -3,33 +3,30 @@ import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import './App.css';
 
 const App = (): ReactElement => {
+  const reader = new FileReader();
+  const pageSize = {
+    width: 192,
+    height: 200,
+  };
+
+	const new_size_ratio = Math.round((pageSize.width / pageSize.height) * 100);
 
 	const handleFileSelected = (e: any) => {
 		const files: any = e.target.files[0];
-		const reader = new FileReader();
 		reader.readAsArrayBuffer(files);
 		reader.onload = async () => {
 			const pdfDoc = await PDFDocument.load(reader.result as any);
-
 			const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
 			// Get the first page of the document
 			const pages = pdfDoc.getPages();
-			const pagescount = pdfDoc.getPages().length;
-			console.log(pagescount);
+			const pagesCount = pdfDoc.getPages().length;
+			console.log(pagesCount);
 
 			const firstPage = pages[0];
 
 			// Get the width and height of the first page
 			// const { width, height } = firstPage.getSize();
-
-			const pageSize = {
-				width: 192,
-				height: 200,
-			};
-
-			const new_size = pageSize;
-			const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
 			pages.forEach((page) => {
 				const { width, height } = page.getMediaBox();
@@ -37,12 +34,12 @@ const App = (): ReactElement => {
 				// If ratio of original and new format are too different we can not simply scale (more that 1%)
 				if (Math.abs(new_size_ratio - size_ratio) > 1) {
 					// Change page size
-					page.setSize(new_size.width, new_size.height);
-					const scale_content = Math.min(new_size.width / width, new_size.height / height);
+					page.setSize(pageSize.width, pageSize.height);
+					const scale_content = Math.min(pageSize.width / width, pageSize.height / height);
 					// Scale content
 					page.scaleContent(scale_content, scale_content);
 				} else {
-					page.scale(new_size.width / width, new_size.height / height);
+					page.scale(pageSize.width / width, pageSize.height / height);
 				}
 			});
 
@@ -70,7 +67,7 @@ const App = (): ReactElement => {
 
 			// Draw a string of text diagonally across the first page
 			firstPage.drawText(gettext, {
-				x: 0,
+				x: 6,
 				y: 110,
 				size: 6,
 				font: helveticaFont,

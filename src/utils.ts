@@ -1,24 +1,30 @@
-import { PDFDocument, ParseSpeeds } from "pdf-lib";
+import { ColorTypes, PDFFont, PDFPage, rgb } from "pdf-lib";
+import { pageSize } from "./consts";
 
-const pageSize = {
-  width: 192,
-  height: 200,
+export const wrapText = (text: any, width: any, font: any, fontSize: any) => {
+  const words = text.split(" ");
+  let line = "";
+  let result = "";
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + " ";
+    const testWidth = font.widthOfTextAtSize(testLine, fontSize);
+    if (testWidth > width) {
+      result += line + "\n";
+      line = words[n] + " ";
+    } else {
+      line = testLine;
+    }
+  }
+  result += line;
+
+  return result;
 };
-export const resizeToPageFormat = async (
-  snapshot: Uint8Array
-): Promise<Uint8Array> => {
-  // Load the original PDF file
-  const pdfDoc = await PDFDocument.load(snapshot, {
-    parseSpeed: ParseSpeeds.Fastest,
-  });
 
+export const resizePdfPages = (pages: any) => {
   const new_size = pageSize;
   const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
-  // Get the first page in the PDF
-  const pages = pdfDoc.getPages();
-
-  pages.forEach((page) => {
+  pages.forEach((page: any) => {
     const { width, height } = page.getMediaBox();
     const size_ratio = Math.round((width / height) * 100);
     // If ratio of original and new format are too different we can not simply scale (more that 1%)
@@ -31,18 +37,25 @@ export const resizeToPageFormat = async (
       );
       // Scale content
       page.scaleContent(scale_content, scale_content);
-      const scaled_diff = {
-        width: Math.round(new_size.width - scale_content * width),
-        height: Math.round(new_size.height - scale_content * height),
-      };
-      // Center content in new page format
-      page.translateContent(
-        Math.round(scaled_diff.width / 2),
-        Math.round(scaled_diff.height / 2)
-      );
     } else {
       page.scale(new_size.width / width, new_size.height / height);
     }
   });
-  return snapshot;
+};
+
+export const drawTextOnPages = (
+  pages: PDFPage[],
+  text: string,
+  font: PDFFont
+) => {
+  pages.forEach((page: any) => {
+    page.drawText(text, {
+      x: 5,
+      y: 110,
+      size: 6,
+      font: font,
+      lineHeight: 6,
+      color: rgb(0.95, 0.1, 0.1),
+    });
+  });
 };

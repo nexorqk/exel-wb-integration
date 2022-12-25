@@ -1,12 +1,28 @@
-import React, { ReactElement } from 'react';
+/* eslint-disable react/jsx-no-comment-textnodes */
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { degrees, PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import './App.css';
 
 const App = (): ReactElement => {
+  const [uploadFile, setUploadFile] = useState('')
+
+  const ref = useRef('');
+
+  // useEffect(() => {
+  //   if (ref.current !== null) {
+  //     //@ts-ignore
+  //     // ref.current.setAttribute("directory", "");
+  //     //@ts-ignore
+  //     ref.current.setAttribute("webkitdirectory", '');
+  //   }
+  // }, [ref]);
+
 	const modifyPdf = async (): Promise<void> => {
 		// Fetch an existing PDF document
 		const url = 'https://pdf-lib.js.org/assets/with_update_sections.pdf';
+		// const url = `${uploadFile}`;
 		const existingPdfBytes = await fetch(url).then((res) => res.arrayBuffer());
+		// const existingPdfBytes = url
 
 		// Load a PDFDocument from the existing PDF bytes
 		const pdfDoc1 = await PDFDocument.load(existingPdfBytes);
@@ -40,10 +56,27 @@ const App = (): ReactElement => {
 		// return pdfBytes
 	};
 
+  const handleFileSelected = (e: any) => {
+    // const files: any = Array.from(e.target.files)[0]
+    const files: any = new ArrayBuffer(e.target.files)
+    // const files: any = (e.target.files)
+    console.log("files:", files.name)
+    console.log("files:", files.webkitRelativePath)
+    console.log("e:", e)
+    // setUploadFile(files.webkitRelativePath)
+    setUploadFile(files)
+  }
+
+
 	return (
 		<>
-			<div className="App">
-				<input type="file" placeholder="upload file" />
+			<div className="row App">
+				{/* <label htmlFor="myfile" className="label">
+					Выберите файлы
+				// eslint-disable-next-line react/jsx-no-comment-textnodes
+				</label> */}
+        {/* @ts-expect-error */}
+				<input type="file" ref={ref} onChange={handleFileSelected} accept="application/pdf" className="file" id="myfile" name="myfile" />
 				<button type="button" onClick={() => modifyPdf()}>
 					Confirm
 				</button>

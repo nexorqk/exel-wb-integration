@@ -2,12 +2,16 @@
 import React, { ReactElement, useEffect, useRef, useState } from "react";
 import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import "./App.css";
+import { pdfJsText } from "pdf";
 
 const App = (): ReactElement => {
   const [uploadFile, setUploadFile] = useState("");
   const [pdfDocs, setPdfDocs] = useState() as any;
 
   const ref = useRef("") as any;
+  useEffect(() => {
+    pdfJsText();
+  });
 
   // useEffect(() => {
   //   if (ref.current !== null) {

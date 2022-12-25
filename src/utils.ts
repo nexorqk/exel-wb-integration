@@ -1,4 +1,4 @@
-import { ColorTypes, PDFFont, rgb } from "pdf-lib";
+import { ColorTypes, PDFFont, PDFPage, rgb } from "pdf-lib";
 import { pageSize } from "./consts";
 
 export const wrapText = (text: any, width: any, font: any, fontSize: any) => {
@@ -43,15 +43,19 @@ export const resizePdfPages = (pages: any) => {
   });
 };
 
-export const drawTextOnPages = (pages: any, text: string, font: PDFFont) => {
+export const drawTextOnPages = (
+  pages: PDFPage[],
+  text: string,
+  font: PDFFont
+) => {
   pages.forEach((page: any) => {
     page.drawText(text, {
-      x: 0,
+      x: 5,
       y: 110,
       size: 6,
       font: font,
       lineHeight: 6,
-      color: rgb(1, 1, 1),
+      color: rgb(0.95, 0.1, 0.1),
     });
   });
 };

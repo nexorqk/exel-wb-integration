@@ -4,43 +4,29 @@ import "./App.css";
 import { resizePdfPages, wrapText, drawTextOnPages } from "./utils";
 
 const App = (): ReactElement => {
-  const [pdfFile, setPdfFile] = useState(null) as any;
-  const [font, setFont] = useState(null) as any;
-  const [pages, setPages] = useState(null) as any;
-  const [text, setText] = useState(null) as any;
-
-  useEffect(() => {
-    if (pdfFile) setPages(pdfFile.getPages());
-    if (font)
-      setText(
-        wrapText(
-          "This text was added with JavaScript textsadhsdfksdjf;dsjfd;slfjdslfkjl!",
-          100,
-          font,
-          6
-        )
-      );
-  }, [font, pdfFile]);
-
   // const pagescount = pdfFile.getPages().length;
 
   const handleFileSelected = (e: any) => {
     const files: any = e.target.files[0];
     const reader = new FileReader();
-
     reader.readAsArrayBuffer(files);
 
     reader.onload = async () => {
       const pdfDoc = await PDFDocument.load(reader.result as any);
-      await setPdfFile(pdfDoc);
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-      await setFont(helveticaFont);
+      const pages = pdfDoc.getPages();
+      const { width } = pages[0].getMediaBox();
+      const text = wrapText(
+        "This text was added with JavaScript te xtsa dhsdf ksdj f;dsj fd;s lfj dslf kjl!",
+        width,
+        helveticaFont,
+        6
+      );
 
-      if (pages && text && font) {
-        resizePdfPages(pages);
+      resizePdfPages(pages);
 
-        drawTextOnPages(pages, text, font);
-      }
+      drawTextOnPages(pages, text, helveticaFont);
+
       // Serialize the PDFDocument to bytes (a Uint8Array)
       const pdfBytes = await pdfDoc.save();
 

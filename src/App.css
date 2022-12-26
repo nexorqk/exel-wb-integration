@@ -1,27 +1,52 @@
 .App {
-  margin-top: 30px;
-  text-align: center;
+	margin-top: 30px;
+	text-align: center;
 }
 
 .label {
-  width: 180px;
-  height: 50px;
-  border-radius: 4px;
-  text-align: center;
-  cursor: pointer;
-  display: block;
-  font: 14px/50px Tahoma;
-  transition: all 0.18s ease-in-out;
-  border: 1px solid #333;
-  color: #333;
+	width: 180px;
+	height: 50px;
+	border-radius: 4px;
+	text-align: center;
+	cursor: pointer;
+	display: block;
+	font: 14px/50px Tahoma;
+	transition: all 0.18s ease-in-out;
+	border: 1px solid #333;
+	color: #333;
 }
 
 .label:hover {
-  color: white;
-  background: #333;
+	color: white;
+	background: #333;
 }
 
-.row{
-  display: flex;
-  justify-content: center;
+.row {
+	display: flex;
+	justify-content: center;
+}
+
+.input-block {
+	display: flex;
+	flex-direction: column;
+	text-align: start;
+	justify-content: end;
+}
+.input-block label{
+  font-family: 'Times New Roman', Times, serif;
+  line-height: 16px;
+  letter-spacing: .1px;
+	font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.button{
+  background: blueviolet;
+  border-radius: 2px;
+  border: none;
+  width: 150px;
+  color: #fff;
+  font-size: 1.25rem;
+  cursor: pointer;
 }

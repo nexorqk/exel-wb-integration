@@ -1,6 +1,10 @@
 import { PDFFont, PDFPage, rgb } from "pdf-lib";
 import { pageSize } from "./consts";
 
+export const setWorkerSrc = (data: any) => {
+	return data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`;
+}
+
 export const wrapText = (text: any, width: any, font: any, fontSize: any) => {
   console.log(text);
 

@@ -32,21 +32,48 @@
 	text-align: start;
 	justify-content: end;
 }
-.input-block label{
-  font-family: 'Times New Roman', Times, serif;
-  line-height: 16px;
-  letter-spacing: .1px;
+.input-block label {
+	font-family: 'Times New Roman', Times, serif;
+	line-height: 16px;
+	letter-spacing: 0.1px;
 	font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 10px;
+	font-weight: 600;
+	margin-bottom: 10px;
 }
 
-.button{
-  background: blueviolet;
-  border-radius: 2px;
-  border: none;
-  width: 150px;
-  color: #fff;
-  font-size: 1.25rem;
-  cursor: pointer;
+.button {
+	background: #8a2be2;
+	border-radius: 2px;
+	border: none;
+	width: 150px;
+	color: #fff;
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+
+.progress, .excel-downloaded {
+	display: flex;
+	justify-content: center;
+	margin-top: 50px;
+}
+
+.progress-bar {
+	display: flex;
+	flex-direction: column;
+	max-width: 300px;
+}
+
+.progress-line.rs-progress-line {
+	width: 360px;
+}
+
+.progress-label, .excel-downloaded-label {
+	font-size: 1.25rem;
+	font-weight: bold;
+	text-align: center;
+}
+.rs-progress-icon-success svg{
+	stroke: #8a2be2!important;
+	width: 2rem;
+	height: 2rem;
 }

@@ -1,13 +1,38 @@
-import React, { ReactElement, useState, useEffect } from "react";
+import React, { ReactElement, useState } from "react";
 import { PDFDocument, StandardFonts } from "pdf-lib";
 import "./App.css";
 import { resizePdfPages, wrapText, drawTextOnPages } from "./utils";
+import * as XLSX from "xlsx";
+import { pdfJsText } from "./pdf";
 
 const App = (): ReactElement => {
-  // const pagescount = pdfFile.getPages().length;
+  const [productList, setProductList] = useState(null) as any;
 
-  const handleFileSelected = (e: any) => {
+  const getXLSXData = async (e: any) => {
+    const fileReader = await new FileReader();
+    fileReader.readAsArrayBuffer(e.target.files[0]);
+
+    fileReader.onload = (e: any) => {
+      const bufferArray = e?.target.result;
+      const wb = XLSX.read(bufferArray, { type: "buffer" });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+
+      const getArgs = data.map((el: any) => ({
+        id: el["Стикер"].slice(-4),
+        label: el["Название товара"],
+      }));
+
+      const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
+
+      setProductList(getSortedArr);
+    };
+  };
+
+  const handlePDFSelected = (e: any) => {
     const files: any = e.target.files[0];
+
     const reader = new FileReader();
     reader.readAsArrayBuffer(files);
 
@@ -22,6 +47,7 @@ const App = (): ReactElement => {
         helveticaFont,
         6
       );
+      pdfJsText(reader.result);
 
       resizePdfPages(pages);
 
@@ -41,11 +67,19 @@ const App = (): ReactElement => {
       <div className="row App">
         <input
           type="file"
-          onChange={handleFileSelected}
+          onChange={(e) => getXLSXData(e)}
+          accept="application/xlsx"
+          className="XLSX-file"
+          id="XLSX"
+          name="XLSX_file"
+        />
+        <input
+          type="file"
+          onChange={handlePDFSelected}
           accept="application/pdf"
-          className="file"
-          id="myfile"
-          name="myfile"
+          className="PDF-file"
+          id="PDF"
+          name="PDF_file"
         />
         <button type="button" onClick={() => {}}>
           Confirm

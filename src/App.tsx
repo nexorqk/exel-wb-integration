@@ -1,6 +1,7 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { PDFDocument } from 'pdf-lib';
+import fontkit from "@pdf-lib/fontkit";
 import { Progress } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { Loader } from './components/loader';
@@ -22,9 +23,9 @@ const App = (): ReactElement => {
 	}
 
 	// eslint-disable-next-line react-hooks/rules-of-hooks
-	useEffect(()=>{
-		setWorkerSrc(pdfjs)
-	})
+	useEffect(() => {
+		setWorkerSrc(pdfjs);
+	});
 
 	const status = percent === pdfPageLength ? 'success' : 'active';
 	const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
@@ -58,16 +59,19 @@ const App = (): ReactElement => {
 
 			const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
 			console.log(getSortedArr);
-			
+
 			setProductList(getSortedArr);
-			setDisable(false)
+			setDisable(false);
 		};
 	};
+
+	const url = "https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf";
+	
 
 	const handlePDFSelected = (e: any) => {
 		// setLoading(true);
 		setGetPdfData(true);
-		setDisable(true)
+		setDisable(true);
 		const files: any = e.target.files[0];
 
 		const reader = new FileReader();
@@ -75,17 +79,20 @@ const App = (): ReactElement => {
 
 		reader.onload = async () => {
 			const pdfDoc = await PDFDocument.load(reader.result as any);
+			pdfDoc.registerFontkit(fontkit)
 			const pages = pdfDoc.getPages();
 
 			setPdfPageLength(pages.length);
-			const helveticaFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+			const fontBytes = await fetch(url).then((res) => res.arrayBuffer());
+			const timesRomanFont = await pdfDoc.embedFont(fontBytes);
+			// const customFont = await pdfDoc.embedFont(fontBytes);
 			const { width } = pages[0].getMediaBox();
 
 			resizePdfPages(pages);
 
 			let idList = [];
 
-			for (let index = 1; index <= pages.length; index++) {
+			for (let index = 1; index <= 5; index++) {
 				const id = await getPDFText(reader.result, index);
 				setPercent(index);
 				idList.push(id);
@@ -95,13 +102,17 @@ const App = (): ReactElement => {
 				const equalProduct = productList.find((product: any) => {
 					return product.id === id;
 				});
-				return [equalProduct.label, id];
+				console.log(equalProduct);
+
+				return [equalProduct.id, `${equalProduct.label}`];
 			});
-			console.log(sortedProducts);
+			console.log('sortedProducts', sortedProducts);
 
 			sortedProducts.forEach((product, index) => {
-				const text = wrapText(product[0], width, helveticaFont, 6);
-				drawTextOnPages(pages[index], text, helveticaFont);
+				console.log(product[1]);
+
+				const text = wrapText(product[1], width, timesRomanFont, 6);
+				drawTextOnPages(pages[index], text, timesRomanFont);
 			});
 
 			// Serialize the PDFDocument to bytes (a Uint8Array)
@@ -150,15 +161,23 @@ const App = (): ReactElement => {
 			{!disable && (
 				<div className="excel-downloaded">
 					<div className="excel-downloaded-bar">
-						<p className='excel-downloaded-label'>'Excel file was downloaded'</p>
+						<p className="excel-downloaded-label">'Excel file was downloaded'</p>
 					</div>
 				</div>
 			)}
 			{getPdfData && (
 				<div className="progress">
 					<div className="progress-bar">
-						<label className='progress-label' htmlFor="progress">{status !== 'success' ? 'Active' : 'Downloaded' }</label>
-						<Progress.Line percent={percent} id='progress' className="progress-line" strokeColor={color} status={status} />
+						<label className="progress-label" htmlFor="progress">
+							{status !== 'success' ? 'Active' : 'Downloaded'}
+						</label>
+						<Progress.Line
+							percent={percent}
+							id="progress"
+							className="progress-line"
+							strokeColor={color}
+							status={status}
+						/>
 					</div>
 				</div>
 			)}

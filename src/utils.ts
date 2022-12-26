@@ -1,11 +1,11 @@
-import { PDFFont, PDFPage, rgb } from "pdf-lib";
+import { PDFDocument, PDFFont, PDFPage, rgb } from "pdf-lib";
 import { pageSize } from "./consts";
 
 export const setWorkerSrc = (data: any) => {
 	return data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`;
 }
 
-export const wrapText = (text: any, width: any, font: any, fontSize: any) => {
+export const wrapText = (text: any, width: any, font: PDFFont, fontSize: any) => {
   console.log(text);
 
   const words = text.split(" ");
@@ -56,6 +56,6 @@ export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
     size: 6,
     font: font,
     lineHeight: 6,
-    color: rgb(0.95, 0.1, 0.1),
+    color: rgb(0,0,0),
   });
 };

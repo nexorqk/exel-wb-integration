@@ -1,13 +1,14 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument } from 'pdf-lib';
-import fontkit from "@pdf-lib/fontkit";
+import fontkit from '@pdf-lib/fontkit';
 import { Progress } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { Loader } from './components/loader';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc } from './utils';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
+import { FONT_URL } from './constants';
 
 const App = (): ReactElement => {
 	const [productList, setProductList] = useState(null) as any;
@@ -57,16 +58,16 @@ const App = (): ReactElement => {
 				label: el['Название товара'],
 			}));
 
+			console.log('getArgs', getArgs);
+			
+
 			const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
-			console.log(getSortedArr);
+			// console.log(getSortedArr);
 
 			setProductList(getSortedArr);
 			setDisable(false);
 		};
 	};
-
-	const url = "https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf";
-	
 
 	const handlePDFSelected = (e: any) => {
 		// setLoading(true);
@@ -79,13 +80,17 @@ const App = (): ReactElement => {
 
 		reader.onload = async () => {
 			const pdfDoc = await PDFDocument.load(reader.result as any);
-			pdfDoc.registerFontkit(fontkit)
+			pdfDoc.registerFontkit(fontkit);
 			const pages = pdfDoc.getPages();
 
+			// pdfDoc.addPage(pdfDocPage)
+			// Insert the second copied page to index 0, so it will be the
+			// first page in `pdfDoc`
+
 			setPdfPageLength(pages.length);
-			const fontBytes = await fetch(url).then((res) => res.arrayBuffer());
+			const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
 			const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-			// const customFont = await pdfDoc.embedFont(fontBytes);
+
 			const { width } = pages[0].getMediaBox();
 
 			resizePdfPages(pages);
@@ -102,16 +107,40 @@ const App = (): ReactElement => {
 				const equalProduct = productList.find((product: any) => {
 					return product.id === id;
 				});
-				console.log(equalProduct);
 
 				return [equalProduct.id, `${equalProduct.label}`];
 			});
-			console.log('sortedProducts', sortedProducts);
+			// console.log('sortedProducts', sortedProducts);
 
-			sortedProducts.forEach((product, index) => {
-				console.log(product[1]);
+			sortedProducts.forEach(async (product, index) => {
+				// console.log('product[1]', product[1]);
 
-				const text = wrapText(product[1], width, timesRomanFont, 6);
+				const text = wrapText(product[1], width * 0.75, timesRomanFont, 6);
+				const countOrder: number = text.includes('упак') ? parseInt(text.slice(-11)) : 0;
+				console.log(countOrder);
+
+				for (let index = 1; index <= countOrder; index++) {
+					let onceOrder;
+					if (index === 1) {
+						onceOrder = `${index} упаковка`;
+					}
+
+					if (index > 1 && index < 5) {
+						onceOrder = `${index} упаковки`;
+					}
+
+					if (index >= 5) {
+						onceOrder = `${index} упаковок`;
+					}
+					console.log(onceOrder);
+				}
+
+				if (countOrder > 0) {
+					const [pdfDocPage] = await pdfDoc.copyPages(pdfDoc, [index]);
+					const toInsertPage = pdfDoc.insertPage(index + 2, pdfDocPage);
+					drawTextOnPages(toInsertPage, text, timesRomanFont);
+				}
+
 				drawTextOnPages(pages[index], text, timesRomanFont);
 			});
 

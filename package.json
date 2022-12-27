@@ -2,6 +2,7 @@
   "name": "exel-wb-integration",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://nexorqk.github.io/wb-ozon-stickers-app",
   "type": "module",
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",
@@ -25,6 +26,8 @@
     "xlsx": "0.18.5"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -50,6 +53,7 @@
   },
   "devDependencies": {
     "@types/react-pdf": "^6.2.0",
+    "gh-pages": "4.0.0",
     "i": "^0.3.7",
     "npm": "^9.2.0",
     "worker-loader": "^3.0.8"

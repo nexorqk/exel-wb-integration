@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/react-gh-pages/static/css/main.4231b0a7.css",
-    "main.js": "/react-gh-pages/static/js/main.0accf37b.js",
-    "static/js/787.605c280d.chunk.js": "/react-gh-pages/static/js/787.605c280d.chunk.js",
-    "index.html": "/react-gh-pages/index.html",
-    "main.4231b0a7.css.map": "/react-gh-pages/static/css/main.4231b0a7.css.map",
-    "main.0accf37b.js.map": "/react-gh-pages/static/js/main.0accf37b.js.map",
-    "787.605c280d.chunk.js.map": "/react-gh-pages/static/js/787.605c280d.chunk.js.map"
+    "main.css": "/exel-wb-integration/static/css/main.4231b0a7.css",
+    "main.js": "/exel-wb-integration/static/js/main.6772bb25.js",
+    "static/js/787.605c280d.chunk.js": "/exel-wb-integration/static/js/787.605c280d.chunk.js",
+    "index.html": "/exel-wb-integration/index.html",
+    "main.4231b0a7.css.map": "/exel-wb-integration/static/css/main.4231b0a7.css.map",
+    "main.6772bb25.js.map": "/exel-wb-integration/static/js/main.6772bb25.js.map",
+    "787.605c280d.chunk.js.map": "/exel-wb-integration/static/js/787.605c280d.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.4231b0a7.css",
-    "static/js/main.0accf37b.js"
+    "static/js/main.6772bb25.js"
   ]
 }

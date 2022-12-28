@@ -1,217 +1,346 @@
-import React, { ReactElement, useEffect, useState } from 'react';
-import * as XLSX from 'xlsx';
-import { PDFDocument } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
-import { Progress } from 'rsuite';
-import { pdfjs } from 'react-pdf';
-import { Loader } from './components/loader';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc } from './utils';
-import './App.css';
-import 'rsuite/dist/rsuite.min.css';
-import { FONT_URL } from './constants';
+import React, {
+  ChangeEventHandler,
+  ReactElement,
+  useEffect,
+  useState,
+} from "react";
+import * as XLSX from "xlsx";
+import { PDFDocument, PDFFont, PDFPage } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { Progress } from "rsuite";
+import { pdfjs } from "react-pdf";
+import { Loader } from "./components/loader";
+import {
+  resizePdfPages,
+  wrapText,
+  drawTextOnPages,
+  setWorkerSrc,
+  getPDFText,
+} from "./utils";
+import "./App.css";
+import "rsuite/dist/rsuite.min.css";
+import { FONT_URL, Multiplier } from "./constants";
+import { Font } from "@pdf-lib/standard-fonts";
 
-const App = (): ReactElement => {
-	const [productList, setProductList] = useState(null) as any;
-	const [getPdfData, setGetPdfData] = useState(false);
-	const [pdfPageLength, setPdfPageLength] = useState(0) as any;
-	const [loading, setLoading] = useState(false);
-	const [disable, setDisable] = useState(true);
+interface ProductGroup {
+  id: string[] | [];
+  label: string;
+  count: number;
+  countOrder: number;
+  text: string;
+}
 
-	const [percent, setPercent] = useState(0);
+export const App = (): ReactElement => {
+  const [productList, setProductList] = useState(null) as any;
+  const [getPdfData, setGetPdfData] = useState(false);
+  const [pdfPageLength, setPdfPageLength] = useState(0) as any;
+  const [loading, setLoading] = useState(false);
+  const [disable, setDisable] = useState(true);
+  const [percent, setPercent] = useState(0);
 
-	if (loading) {
-		return <Loader />;
-	}
+  const [pdfDocument, setPdfDocument] = useState<PDFDocument>();
+  const [finalPDF, setFinalPDF] = useState<PDFDocument>();
+  const [objectUrl, setObjectUrl] = useState("");
+  const [blob, setBlob] = useState<Blob>();
+  const status = percent === pdfPageLength ? "success" : "active";
+  const color = percent === pdfPageLength ? "#8a2be2" : "#02749C";
 
-	// eslint-disable-next-line react-hooks/rules-of-hooks
-	useEffect(() => {
-		setWorkerSrc(pdfjs);
-	});
+  // if (loading) {
+  //   return <Loader />;
+  // }
 
-	const status = percent === pdfPageLength ? 'success' : 'active';
-	const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    setWorkerSrc(pdfjs);
+  });
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  // useEffect(() => {
+  //   console.log(finalPDF);
+  // }, [finalPDF]);
 
-	const getPDFText = async (file: any, number: number) => {
-		const doc = await pdfjs.getDocument(file).promise;
-		const page = await doc.getPage(number);
-		// const doc = await pdfJS.getDocument(src).promise;
-		const test = await page.getTextContent();
-		// @ts-ignore
-		const item: any = test.items.find((item) => item.str.length === 4);
+  const getSortedArray = () => {
+    const getCountOrder = (text: string) => {
+      const splitText = text.split(" ");
+      const bl = splitText.includes("упаковок");
+      splitText.includes("упаковка");
+      splitText.includes("упаковки");
+      if (bl) {
+        for (let i = 0; i < splitText.length; i++) {
+          const prevValue = splitText
+            .filter((el) => el.includes("упак"))
+            .join();
+          const curIndex = splitText.indexOf(prevValue);
+          const countOrder = splitText[curIndex - 1];
+          // console.log("countOrder", countOrder);
+          return +countOrder;
+        }
+      }
 
-		return item.str;
-	};
+      if (splitText.includes("уп.")) {
+        for (let i = 0; i < splitText.length; i++) {
+          const prevValue = splitText.filter((el) => el.includes("уп.")).join();
+          const curIndex = splitText.indexOf(prevValue);
+          const countOrder = splitText[curIndex - 1];
+          // console.log("countOrder - 2", countOrder);
+          return +countOrder;
+        }
+      }
+      return 1;
+    };
 
-	const getXLSXData = async (e: any) => {
-		const fileReader = await new FileReader();
-		fileReader.readAsArrayBuffer(e.target.files[0]);
+    const arr = productList.map((el: { id: any; label: string }) => ({
+      id: el.id,
+      label: el.label,
+      count: getCountOrder(el.label),
+    }));
 
-		fileReader.onload = (e: any) => {
-			const bufferArray = e?.target.result;
-			const wb = XLSX.read(bufferArray, { type: 'buffer' });
-			const wsname = wb.SheetNames[0];
-			const ws = wb.Sheets[wsname];
-			const data = XLSX.utils.sheet_to_json(ws);
+    const result = Object.values(
+      arr.reduce(
+        (
+          acc: any,
+          item: { label: string | number; id: ConcatArray<never> }
+        ) => {
+          if (!acc[item.label])
+            acc[item.label] = {
+              ...item,
+            };
+          else acc[item.label].id = [].concat(acc[item.label].id, item.id);
+          return acc;
+        },
+        {} as any
+      )
+    );
 
-			const getArgs = data.map((el: any) => ({
-				id: el['Стикер'].slice(-4),
-				label: el['Название товара'],
-			}));
+    const sortedArray = result.map((el: any) => ({
+      ...el,
+      countOrder: typeof el.id === "string" ? 1 : el.id.length,
+      text: `по ${el.count} товару в заказе (${
+        typeof el.id === "string" ? 1 : el.id.length
+      } шт. заказов)`,
+    }));
 
-			console.log('getArgs', getArgs);
-			
+    return sortedArray;
+  };
 
-			const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
-			// console.log(getSortedArr);
+  const generateFinalPDF = async (
+    pdfDocument: PDFDocument,
+    productGroups: ProductGroup[],
+    pdfBuffer: ArrayBuffer,
+    font: PDFFont,
+    multiplier: number
+  ) => {
+    const finalPdf = await PDFDocument.create();
+    const pageCount = pdfDocument.getPageCount();
 
-			setProductList(getSortedArr);
-			setDisable(false);
-		};
-	};
+    const prepareIndices = () => {
+      let allPages = [];
 
-	const handlePDFSelected = (e: any) => {
-		// setLoading(true);
-		setGetPdfData(true);
-		setDisable(true);
-		const files: any = e.target.files[0];
+      for (let i = 0; i < pageCount; i++) {
+        allPages.push(i);
+      }
+      return allPages;
+    };
+    const pages = pdfDocument.getPages();
 
-		const reader = new FileReader();
-		reader.readAsArrayBuffer(files);
+    const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
-		reader.onload = async () => {
-			const pdfDoc = await PDFDocument.load(reader.result as any);
-			pdfDoc.registerFontkit(fontkit);
-			const pages = pdfDoc.getPages();
+    let pageIds: string[] = [];
+    for (let index = 1; index < pageCount; index++) {
+      const id = await getPDFText(pdfBuffer, index);
+      pageIds.push(id);
+    }
+    let num = 0;
+    // debugger;
+    productGroups.forEach(async (group) => {
+      finalPdf.addPage();
+      const finalPageCount = finalPdf.getPageCount();
+      const lastPage = finalPdf.getPage(finalPageCount - 1);
+      drawTextOnPages(lastPage, group.text, font);
+      let result = null;
+      let pagesForGroup = [];
+      for (let i = 0; i < pageCount; i++) {
+        if (typeof group.id === "string") {
+          result =
+            pageIds[i] === group.id ? pagesForGroup.push(copiedPages[i]) : null;
+        } else {
+          for (let j = 0; j < group.id.length; j++) {
+            if (group.id[j] === pageIds[i]) {
+              pagesForGroup.push(copiedPages[i]);
+            }
+          }
+        }
+      }
+      console.log(pagesForGroup);
 
-			// pdfDoc.addPage(pdfDocPage)
-			// Insert the second copied page to index 0, so it will be the
-			// first page in `pdfDoc`
+      console.log("pages for group", (num += 1), pagesForGroup);
 
-			setPdfPageLength(pages.length);
-			const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
-			const timesRomanFont = await pdfDoc.embedFont(fontBytes);
+      pagesForGroup.forEach((page, index) => {
+        for (let i = 0; i < multiplier; i++) {
+          //@ts-ignore
 
-			const { width } = pages[0].getMediaBox();
+          finalPdf.addPage(page);
+        }
+      });
+    });
+    console.log("end generateFinalPDF ");
 
-			resizePdfPages(pages);
+    return finalPdf;
+  };
 
-			let idList = [];
+  const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+    if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
 
-			for (let index = 1; index <= 5; index++) {
-				const id = await getPDFText(reader.result, index);
-				setPercent(index);
-				idList.push(id);
-			}
+    fileReader.onload = (e: any) => {
+      const bufferArray = e?.target.result;
+      const wb = XLSX.read(bufferArray, { type: "buffer" });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
 
-			const sortedProducts = idList.map((id) => {
-				const equalProduct = productList.find((product: any) => {
-					return product.id === id;
-				});
+      const getArgs = data.map((el: any) => ({
+        id: el["Стикер"].slice(-4),
+        label: el["Название товара"],
+      }));
 
-				return [equalProduct.id, `${equalProduct.label}`];
-			});
-			// console.log('sortedProducts', sortedProducts);
+      const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
 
-			sortedProducts.forEach(async (product, index) => {
-				// console.log('product[1]', product[1]);
+      setProductList(getSortedArr);
+      setDisable(false);
+    };
+  };
 
-				const text = wrapText(product[1], width * 0.75, timesRomanFont, 6);
-				const countOrder: number = text.includes('упак') ? parseInt(text.slice(-11)) : 0;
-				console.log(countOrder);
+  const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const reader = new FileReader();
 
-				for (let index = 1; index <= countOrder; index++) {
-					let onceOrder;
-					if (index === 1) {
-						onceOrder = `${index} упаковка`;
-					}
+    if (e.target.files) {
+      reader.readAsArrayBuffer(e.target.files[0]);
+      setBlob(e.target.files[0]);
+    }
 
-					if (index > 1 && index < 5) {
-						onceOrder = `${index} упаковки`;
-					}
+    reader.onload = async () => {
+      // debugger;
+      const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
+      const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
+      console.log(reader.result);
 
-					if (index >= 5) {
-						onceOrder = `${index} упаковок`;
-					}
-					console.log(onceOrder);
-				}
+      pdfDoc.registerFontkit(fontkit);
+      const timesRomanFont = await pdfDoc.embedFont(fontBytes);
+      setPdfDocument(pdfDoc);
 
-				if (countOrder > 0) {
-					const [pdfDocPage] = await pdfDoc.copyPages(pdfDoc, [index]);
-					const toInsertPage = pdfDoc.insertPage(index + 2, pdfDocPage);
-					drawTextOnPages(toInsertPage, text, timesRomanFont);
-				}
+      // setLoading(true);
+      const productGroups = getSortedArray();
+      const finalPDF = await generateFinalPDF(
+        pdfDoc,
+        productGroups,
+        reader.result as ArrayBuffer,
+        timesRomanFont,
+        Multiplier.WILDBERRIES
+      );
+      setFinalPDF(finalPDF);
+      // setBlob(new Blob([finalPDF]));
+      // setLoading(false);
+      // const pdfBytes = await finalPDF.save();
+      // const base64DataUri = await finalPDF.saveAsBase64({ dataUri: true });
+      //@ts-ignore
+      // window.download(base64DataUri, "1-1.pdf", "application/pdf");
+      console.log("end of onloadend");
+    };
 
-				drawTextOnPages(pages[index], text, timesRomanFont);
-			});
+    setGetPdfData(true);
+    setDisable(true);
+    // debugger;
+  };
 
-			// Serialize the PDFDocument to bytes (a Uint8Array)
-			const pdfBytes = await pdfDoc.save();
-			//   setLoading(false);
-			//@ts-ignore
-			window.download(pdfBytes, '1-1.pdf', 'application/pdf');
-		};
-	};
+  const onClick = async () => {
+    if (finalPDF) {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      const pdfBytes = await finalPDF.save();
+      const pdfBlob = new Blob([pdfBytes]);
 
-	return (
-		<>
-			<div className="row App">
-				<div className="input-block">
-					<label htmlFor="XLSX" className="btn">
-						Choose Excel file
-					</label>
-					<input
-						type="file"
-						onChange={(e) => getXLSXData(e)}
-						accept="application/xlsx"
-						className="XLSX-file"
-						id="XLSX"
-						name="XLSX_file"
-					/>
-				</div>
-				<div className="input-block">
-					<label htmlFor="PDF" className="btn">
-						Choose PDF file
-					</label>
-					<input
-						type="file"
-						onChange={handlePDFSelected}
-						placeholder="Choose 11"
-						accept="application/pdf"
-						className="PDF-file"
-						id="PDF"
-						name="PDF_file"
-						disabled={disable}
-					/>
-				</div>
-				<button className="button" type="button" onClick={(e) => console.log(e)}>
-					Confirm
-				</button>
-			</div>
-			{!disable && (
-				<div className="excel-downloaded">
-					<div className="excel-downloaded-bar">
-						<p className="excel-downloaded-label">'Excel file was downloaded'</p>
-					</div>
-				</div>
-			)}
-			{getPdfData && (
-				<div className="progress">
-					<div className="progress-bar">
-						<label className="progress-label" htmlFor="progress">
-							{status !== 'success' ? 'Active' : 'Downloaded'}
-						</label>
-						<Progress.Line
-							percent={percent}
-							id="progress"
-							className="progress-line"
-							strokeColor={color}
-							status={status}
-						/>
-					</div>
-				</div>
-			)}
-		</>
-	);
+      setObjectUrl(URL.createObjectURL(pdfBlob));
+      const fileURL = window.URL.createObjectURL(pdfBlob);
+      // Setting various property values
+      let alink = document.createElement("a");
+      alink.href = fileURL;
+      alink.download = "SamplePDF.pdf";
+      alink.click();
+    }
+
+    // try {
+    //   if (finalPDF) {
+    //     const pdfBytes = await finalPDF.save();
+    //     //@ts-ignore
+    //     window.download(pdfBytes, "1-1.pdf", "application/pdf");
+    //   }
+    // } catch (error) {
+    //   console.log(error);
+    //   }
+  };
+
+  return (
+    <>
+      <div className="row App">
+        <div className="input-block">
+          <label htmlFor="XLSX" className="btn">
+            Choose Excel file
+          </label>
+          <input
+            type="file"
+            onChange={handleXLSXSelected}
+            accept="application/xlsx"
+            className="XLSX-file"
+            id="XLSX"
+            name="XLSX_file"
+            disabled={loading}
+          />
+        </div>
+        <div className="input-block">
+          <label htmlFor="PDF" className="btn">
+            Choose PDF file
+          </label>
+          <input
+            type="file"
+            onChange={handlePDFSelected}
+            placeholder="Choose 11"
+            accept="application/pdf"
+            className="PDF-file"
+            id="PDF"
+            name="PDF_file"
+            disabled={disable || loading}
+          />
+        </div>
+        <button className="button" type="button" onClick={onClick}>
+          Confirm
+        </button>
+      </div>
+      {!disable && (
+        <div className="excel-downloaded">
+          <div className="excel-downloaded-bar">
+            <p className="excel-downloaded-label">
+              'Excel file was downloaded'
+            </p>
+          </div>
+        </div>
+      )}
+      {getPdfData && (
+        <div className="progress">
+          <div className="progress-bar">
+            <label className="progress-label" htmlFor="progress">
+              {status !== "success" ? "Active" : "Downloaded"}
+            </label>
+            <Progress.Line
+              percent={percent}
+              id="progress"
+              className="progress-line"
+              strokeColor={color}
+              status={status}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
 };
-
-export default App;

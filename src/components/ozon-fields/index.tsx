@@ -52,7 +52,7 @@ export const OzonFields = (): ReactElement => {
             splitText.includes('упаковки');
             if (bl) {
                 for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter((el) => el.includes('упак')).join();
+                    const prevValue = splitText.filter(el => el.includes('упак')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
                     // console.log("countOrder", countOrder);
@@ -62,7 +62,7 @@ export const OzonFields = (): ReactElement => {
 
             if (splitText.includes('уп.')) {
                 for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter((el) => el.includes('уп.')).join();
+                    const prevValue = splitText.filter(el => el.includes('уп.')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
                     // console.log("countOrder - 2", countOrder);
@@ -86,15 +86,13 @@ export const OzonFields = (): ReactElement => {
                     };
                 else acc[item.label].id = [].concat(acc[item.label].id, item.id);
                 return acc;
-            }, {} as any)
+            }, {} as any),
         );
 
         const sortedArray = result.map((el: any) => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${
-                typeof el.id === 'string' ? 1 : el.id.length
-            } шт. заказов)`,
+            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
         }));
 
         return sortedArray;
@@ -105,12 +103,12 @@ export const OzonFields = (): ReactElement => {
         productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
-        multiplier: number
+        multiplier: number,
     ) => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
-        const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
+        const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const prepareIndices = () => {
@@ -135,7 +133,7 @@ export const OzonFields = (): ReactElement => {
         let num = 0;
 
         // debugger;
-        productGroups.forEach(async (group) => {
+        productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizePdfPages(pages);
@@ -208,7 +206,7 @@ export const OzonFields = (): ReactElement => {
         reader.onload = async () => {
             const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
             pdfDoc.registerFontkit(fontkit);
-            const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
+            const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
             console.log('timesRomanFont', timesRomanFont);
 
@@ -225,7 +223,7 @@ export const OzonFields = (): ReactElement => {
                 productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
-                Multiplier.OZON
+                Multiplier.OZON,
             );
             setFinalPDF(finalPDF);
 
@@ -273,7 +271,7 @@ export const OzonFields = (): ReactElement => {
             <div className="row App">
                 <div className="input-block">
                     <label htmlFor="XLSX" className="btn">
-                        Choose Excel file
+                        Выбрать Excel файл
                     </label>
                     <input
                         type="file"
@@ -294,7 +292,7 @@ export const OzonFields = (): ReactElement => {
                         speaker={<Tooltip>Сначала загрузите EXCEL файл!</Tooltip>}
                     >
                         <label htmlFor="PDF" className="btn">
-                            Choose PDF file
+                            Выбрать PDF файл
                             <input
                                 type="file"
                                 onChange={handlePDFSelected}
@@ -309,13 +307,13 @@ export const OzonFields = (): ReactElement => {
                     </Whisper>
                 </div>
                 <button className="button" disabled={!finalPDF} type="button" onClick={onClick}>
-                    Confirm
+                    Скачать
                 </button>
             </div>
             {!disable && (
                 <div className="excel-downloaded">
                     <div className="excel-downloaded-bar">
-                        <p className="excel-downloaded-label">Excel file was downloaded</p>
+                        <p className="excel-downloaded-label">Excel файл был загружен!</p>
                     </div>
                 </div>
             )}

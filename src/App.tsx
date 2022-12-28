@@ -55,7 +55,7 @@ export const App = (): ReactElement => {
             splitText.includes('упаковки');
             if (bl) {
                 for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter((el) => el.includes('упак')).join();
+                    const prevValue = splitText.filter(el => el.includes('упак')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
                     // console.log("countOrder", countOrder);
@@ -65,7 +65,7 @@ export const App = (): ReactElement => {
 
             if (splitText.includes('уп.')) {
                 for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter((el) => el.includes('уп.')).join();
+                    const prevValue = splitText.filter(el => el.includes('уп.')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
                     // console.log("countOrder - 2", countOrder);
@@ -89,16 +89,14 @@ export const App = (): ReactElement => {
                     };
                 else acc[item.label].id = [].concat(acc[item.label].id, item.id);
                 return acc;
-            }, {} as any)
+            }, {} as any),
         );
 
         console.log('result: ', result);
         const sortedArray = result.map((el: any) => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${
-                typeof el.id === 'string' ? 1 : el.id.length
-            } шт. заказов)
+            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)
 
       1 шт - ${el.label}
       `,
@@ -112,12 +110,12 @@ export const App = (): ReactElement => {
         productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
-        multiplier: number
+        multiplier: number,
     ) => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
-        const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
+        const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const prepareIndices = () => {
@@ -139,7 +137,7 @@ export const App = (): ReactElement => {
         }
         let num = 0;
 
-        productGroups.forEach(async (group) => {
+        productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizePdfPages(pages);
@@ -210,7 +208,7 @@ export const App = (): ReactElement => {
         reader.onload = async () => {
             const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
             pdfDoc.registerFontkit(fontkit);
-            const fontBytes = await fetch(FONT_URL).then((res) => res.arrayBuffer());
+            const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
             console.log('timesRomanFont', timesRomanFont);
 
@@ -226,7 +224,7 @@ export const App = (): ReactElement => {
                 productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
-                Multiplier.WILDBERRIES
+                Multiplier.WILDBERRIES,
             );
             setFinalPDF(finalPDF);
 
@@ -259,6 +257,14 @@ export const App = (): ReactElement => {
     return (
         <div className="root">
             <h1 className="logo-title">WB OZON Stickers</h1>
+            <aside className="rules-article">
+                <ul style={{ listStyle: 'decimal' }}>
+                    <li>Загрузите Excel-файл</li>
+                    <li>Загрузите PDF-файл</li>
+                    <li>Дождитесь загрузки</li>
+                    <li>Нажмите на кнопку Скачать</li>
+                </ul>
+            </aside>
             <div className="section">
                 <h2>Wildberries Stickers:</h2>
                 <div className="row App">
@@ -281,11 +287,7 @@ export const App = (): ReactElement => {
                             placement="top"
                             controlId={`control-id-hover`}
                             trigger="hover"
-                            speaker={
-                                <Tooltip>
-                                    Сначала загрузите EXCEL файл!
-                                </Tooltip>
-                            }
+                            speaker={<Tooltip>Сначала загрузите EXCEL файл!</Tooltip>}
                         >
                             <label htmlFor="PDF" className="btn" aria-disabled>
                                 Выбрать PDF файл
@@ -306,9 +308,9 @@ export const App = (): ReactElement => {
                     <button className="button" disabled={!finalPDF} type="button" onClick={() => onClick()}>
                         Скачать
                         {/* <Progress.Circle /> */}
-                        <Loader />
                     </button>
                 </div>
+                {/* <Loader /> */}
                 {!disable && (
                     <div className="excel-downloaded">
                         <div className="excel-downloaded-bar">

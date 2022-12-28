@@ -1,7 +1,6 @@
 import { PDFFont, PDFPage, rgb } from "pdf-lib";
 import { pageSize } from "./constants";
 import { pdfjs } from "react-pdf";
-import { PDFDocument } from "pdf-lib";
 
 export const setWorkerSrc = (data: any) => {
   return (data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`);
@@ -14,7 +13,8 @@ export const wrapText = (
   fontSize: any
 ) => {
   const words = text.split(" ");
-
+  console.log('words', words);
+  
   let line = "";
   let result = "";
   for (let n = 0; n < words.length; n++) {
@@ -32,7 +32,7 @@ export const wrapText = (
   return result;
 };
 
-export const resizePdfPages = (pages: any) => {
+export const resizePdfPages = (pages: PDFPage[]) => {
   const new_size = pageSize;
   const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -57,11 +57,11 @@ export const resizePdfPages = (pages: any) => {
 
 export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
   page.drawText(text, {
-    x: 5,
-    y: 110,
-    size: 8,
+    x: 25,
+    y: 300,
+    size: 60,
     font: font,
-    lineHeight: 8,
+    lineHeight: 36,
     color: rgb(0, 0, 0),
   });
 };

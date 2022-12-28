@@ -4,19 +4,18 @@ import { PDFDocument, PDFFont, PDFPage } from "pdf-lib";
 import fontkit from "@pdf-lib/fontkit";
 import { Progress } from "rsuite";
 import { pdfjs } from "react-pdf";
-import { Loader } from "./components/loader";
+import { Loader } from "../loader";
 import {
   resizePdfPages,
   wrapText,
   drawTextOnPages,
   setWorkerSrc,
   getPDFText,
-} from "./utils";
-import "./App.css";
+} from "../../utils";
+import "../../App";
 import "rsuite/dist/rsuite.min.css";
-import { FONT_URL, Multiplier } from "./constants";
+import { FONT_URL, Multiplier } from "../../constants";
 import { Font } from "@pdf-lib/standard-fonts";
-import { OzonFields } from "./components/ozon-fields";
 
 interface ProductGroup {
   id: string[] | [];
@@ -26,7 +25,7 @@ interface ProductGroup {
   text: string;
 }
 
-export const App = (): ReactElement => {
+export const OzonFields = (): ReactElement => {
   const [productList, setProductList] = useState(null) as any;
   const [getPdfData, setGetPdfData] = useState(false);
   const [pdfPageLength, setPdfPageLength] = useState(0) as any;
@@ -41,10 +40,6 @@ export const App = (): ReactElement => {
   const [blob, setBlob] = useState<Blob>();
   const status = percent === pdfPageLength ? "success" : "active";
   const color = percent === pdfPageLength ? "#8a2be2" : "#02749C";
-
-  // if (loading) {
-  //   return <Loader />;
-  // }
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   useEffect(() => {
@@ -108,16 +103,12 @@ export const App = (): ReactElement => {
       )
     );
 
-    console.log("result: ", result);
     const sortedArray = result.map((el: any) => ({
       ...el,
       countOrder: typeof el.id === "string" ? 1 : el.id.length,
       text: `по ${el.count} товару в заказе (${
         typeof el.id === "string" ? 1 : el.id.length
-      } шт. заказов)
-
-      1 шт - ${el.label}
-      `,
+      } шт. заказов)`,
     }));
 
     return sortedArray;
@@ -249,7 +240,7 @@ export const App = (): ReactElement => {
         productGroups,
         reader.result as ArrayBuffer,
         timesRomanFont,
-        Multiplier.WILDBERRIES
+        Multiplier.OZON
       );
       setFinalPDF(finalPDF);
 
@@ -292,76 +283,70 @@ export const App = (): ReactElement => {
   };
 
   return (
-    <div className="root">
-      <h1 className="logo-title">WB OZON Stickers</h1>
-      <div className="section">
-        <h2>Wildberries Stickers:</h2>
-        <div className="row App">
-          <div className="input-block">
-            <label htmlFor="XLSX" className="btn">
-              Выбрать Excel файл
-              <input
-                type="file"
-                onChange={handleXLSXSelected}
-                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                className="XLSX-file"
-                id="XLSX"
-                name="XLSX_file"
-                disabled={loading}
-              />
-            </label>
-          </div>
-          <div className="input-block">
-            <label htmlFor="PDF" className="btn">
-              Выбрать PDF файл
-              <input
-                type="file"
-                onChange={handlePDFSelected}
-                placeholder="Choose 11"
-                accept="application/pdf"
-                className="PDF-file"
-                id="PDF"
-                name="PDF_file"
-                disabled={disable || loading}
-              />
-            </label>
-          </div>
-          <button
-            className="button"
-            disabled={!finalPDF}
-            type="button"
-            onClick={onClick}
-          >
-            Скачать
-          </button>
+    <div style={{ marginTop: 40 }}>
+      <h2>Ozon Stickers:</h2>
+      <div className="row App">
+        <div className="input-block">
+          <label htmlFor="XLSX" className="btn">
+            Choose Excel file
+          </label>
+          <input
+            type="file"
+            onChange={handleXLSXSelected}
+            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="XLSX-file"
+            id="XLSX"
+            name="XLSX_file"
+            disabled={loading}
+          />
         </div>
-        {!disable && (
-          <div className="excel-downloaded">
-            <div className="excel-downloaded-bar">
-              <p className="excel-downloaded-label">Excel файл был загружен!</p>
-            </div>
-          </div>
-        )}
-        {getPdfData && (
-          <div className="progress">
-            <div className="progress-bar">
-              <label className="progress-label" htmlFor="progress">
-                {status !== "success" ? "Active" : "Downloaded"}
-              </label>
-              <Progress.Line
-                percent={percent}
-                id="progress"
-                className="progress-line"
-                strokeColor={color}
-                status={status}
-              />
-            </div>
-          </div>
-        )}
+        <div className="input-block">
+          <label htmlFor="PDF" className="btn">
+            Choose PDF file
+          </label>
+          <input
+            type="file"
+            onChange={handlePDFSelected}
+            placeholder="Choose 11"
+            accept="application/pdf"
+            className="PDF-file"
+            id="PDF"
+            name="PDF_file"
+            disabled={disable || loading}
+          />
+        </div>
+        <button
+          className="button"
+          disabled={!finalPDF}
+          type="button"
+          onClick={onClick}
+        >
+          Confirm
+        </button>
       </div>
-      <div className="section">
-        <OzonFields />
-      </div>
+      {!disable && (
+        <div className="excel-downloaded">
+          <div className="excel-downloaded-bar">
+            <p className="excel-downloaded-label">Excel file was downloaded</p>
+          </div>
+        </div>
+      )}
+      {getPdfData && (
+        <div className="progress">
+          <div className="progress-bar">
+            <label className="progress-label" htmlFor="progress">
+              {status !== "success" ? "Active" : "Downloaded"}
+            </label>
+            <Progress.Line
+              percent={percent}
+              id="progress"
+              className="progress-line"
+              strokeColor={color}
+              status={status}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

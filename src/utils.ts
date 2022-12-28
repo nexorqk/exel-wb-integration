@@ -13,8 +13,8 @@ export const wrapText = (
   fontSize: any
 ) => {
   const words = text.split(" ");
-  console.log('words', words);
-  
+  console.log("words", words);
+
   let line = "";
   let result = "";
   for (let n = 0; n < words.length; n++) {
@@ -57,11 +57,11 @@ export const resizePdfPages = (pages: PDFPage[]) => {
 
 export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
   page.drawText(text, {
-    x: 25,
-    y: 300,
+    x: 100,
+    y: 650,
     size: 60,
     font: font,
-    lineHeight: 36,
+    lineHeight: 60,
     color: rgb(0, 0, 0),
   });
 };

@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/exel-wb-integration/static/css/main.4231b0a7.css",
-    "main.js": "/exel-wb-integration/static/js/main.6772bb25.js",
+    "main.css": "/exel-wb-integration/static/css/main.e08a661d.css",
+    "main.js": "/exel-wb-integration/static/js/main.07c82ae4.js",
     "static/js/787.605c280d.chunk.js": "/exel-wb-integration/static/js/787.605c280d.chunk.js",
     "index.html": "/exel-wb-integration/index.html",
-    "main.4231b0a7.css.map": "/exel-wb-integration/static/css/main.4231b0a7.css.map",
-    "main.6772bb25.js.map": "/exel-wb-integration/static/js/main.6772bb25.js.map",
+    "main.e08a661d.css.map": "/exel-wb-integration/static/css/main.e08a661d.css.map",
+    "main.07c82ae4.js.map": "/exel-wb-integration/static/js/main.07c82ae4.js.map",
     "787.605c280d.chunk.js.map": "/exel-wb-integration/static/js/787.605c280d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.4231b0a7.css",
-    "static/js/main.6772bb25.js"
+    "static/css/main.e08a661d.css",
+    "static/js/main.07c82ae4.js"
   ]
 }

@@ -4,12 +4,11 @@ import { PDFDocument, PDFFont } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { Loader } from './components/loader';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
-import './App.css';
-import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
+import './App.css';
+import 'rsuite/dist/rsuite.min.css';
 
 interface ProductGroup {
     id: string[] | [];
@@ -22,28 +21,19 @@ interface ProductGroup {
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState(null) as any;
     const [getPdfData, setGetPdfData] = useState(false);
-    const [pdfPageLength, setPdfPageLength] = useState(0) as any;
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
 
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
-    const status = percent === pdfPageLength ? 'success' : 'active';
-    const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
-
-    // if (loading) {
-    //   return <Loader />;
-    // }
+    const status = percent === 100 ? 'success' : 'active';
+    const color = percent === 100 ? '#8a2be2' : '#02749C';
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    // useEffect(() => {
-    //   console.log(finalPDF);
-    // }, [finalPDF]);
 
     const getSortedArray = () => {
         const getCountOrder = (text: string) => {
@@ -129,7 +119,10 @@ export const App = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            setPercent(index);
+            let getPercent = 100 / pageCount.length
+            setPercent(getPercent * index);
+            console.log(100 / pageCount.length);
+
             pageIds.push(id);
         }
 
@@ -155,9 +148,6 @@ export const App = (): ReactElement => {
                     }
                 }
             }
-            // console.log(pagesForGroup);
-
-            // console.log('pages for group', (num += 1), pagesForGroup);
 
             pagesForGroup.forEach((page, index) => {
                 for (let i = 0; i < multiplier; i++) {
@@ -205,11 +195,6 @@ export const App = (): ReactElement => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-            // console.log('timesRomanFont', timesRomanFont);
-
-            const pages = pdfDoc.getPages();
-            // const { width } = pages[0].getMediaBox();
-            setPdfPageLength(pages.length);
 
             const productGroups = getSortedArray();
             const finalPDF = await generateFinalPDF(
@@ -300,7 +285,6 @@ export const App = (): ReactElement => {
 
                     <button className="button" disabled={!finalPDF} type="button" onClick={() => onClick()}>
                         Скачать
-                        {/* <Progress.Circle /> */}
                     </button>
                 </div>
                 {/* <Loader /> */}
@@ -318,7 +302,7 @@ export const App = (): ReactElement => {
                                 {status !== 'success' ? 'Active' : 'Downloaded'}
                             </label>
                             <Progress.Line
-                                percent={percent}
+                                percent={+percent.toFixed(2)}
                                 id="progress"
                                 className="progress-line"
                                 strokeColor={color}

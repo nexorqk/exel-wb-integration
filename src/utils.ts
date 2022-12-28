@@ -56,3 +56,29 @@ export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
 		color: rgb(0, 0, 0),
 	});
 };
+
+export const getCountOrder = (text: string) => {
+	const splitText = text.split(' ');
+	const bl =
+		splitText.includes('упаковок') ||
+		splitText.includes('упаковка') ||
+		splitText.includes('упаковки');
+	if (bl) {
+		for (let i = 0; i < splitText.length; i++) {
+			const prevValue = splitText.filter((el) => el.includes('упак')).join();
+			const curIndex = splitText.indexOf(prevValue);
+			const countOrder = splitText[curIndex - 1];
+			return +countOrder;
+		}
+	}
+
+	if (splitText.includes('уп.')) {
+		for (let i = 0; i < splitText.length; i++) {
+			const prevValue = splitText.filter((el) => el.includes('уп.')).join();
+			const curIndex = splitText.indexOf(prevValue);
+			const countOrder = splitText[curIndex - 1];
+			return +countOrder;
+		}
+	}
+	return 1;
+};

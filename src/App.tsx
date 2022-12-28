@@ -5,10 +5,18 @@ import fontkit from '@pdf-lib/fontkit';
 import { Progress } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { Loader } from './components/loader';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc } from './utils';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getCountOrder } from './utils';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL } from './constants';
+
+interface ISortDate {
+	[x: string]: any;
+	id: string[] | string;
+	label: string;
+	count: number;
+	text: string;
+}
 
 const App = (): ReactElement => {
 	const [productList, setProductList] = useState(null) as any;
@@ -51,18 +59,49 @@ const App = (): ReactElement => {
 			const wb = XLSX.read(bufferArray, { type: 'buffer' });
 			const wsname = wb.SheetNames[0];
 			const ws = wb.Sheets[wsname];
-			const data = XLSX.utils.sheet_to_json(ws);
+			const data = XLSX.utils.sheet_to_json(ws) as any;
 
-			const getArgs = data.map((el: any) => ({
+			const getArgs = data.map((el: { [x: string]: any }) => ({
 				id: el['Стикер'].slice(-4),
 				label: el['Название товара'],
 			}));
 
-			console.log('getArgs', getArgs);
-			
+			// console.log('getArgs', getArgs);
 
-			const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
-			// console.log(getSortedArr);
+			const getSortedArray = () => {
+				const newArray = getArgs.map((el: { id: any; label: string }) => ({
+					id: el.id,
+					label: el.label,
+					count: getCountOrder(el.label),
+				}));
+
+				const result = Object.values(
+					newArray.reduce((acc: any, item: { label: string | number; id: ConcatArray<never> }) => {
+						if (!acc[item.label])
+							acc[item.label] = {
+								...item,
+							};
+						else acc[item.label].id = [].concat(acc[item.label].id, item.id);
+						return acc;
+					}, {} as ISortDate)
+				);
+
+				const sortedArray = result.map((el: any) => ({
+					...el,
+					countOrder: typeof el.id === 'string' ? 1 : el.id.length,
+					text: `по ${el.count} товару в заказе (${
+						typeof el.id === 'string' ? 1 : el.id.length
+					} шт. заказов)`,
+				}));
+
+				// console.log(sortedArray);
+
+				return sortedArray;
+			};
+
+			console.log(getSortedArray());
+
+			const getSortedArr = getArgs.sort((a: { id: number }, b: { id: number }) => a.id - b.id);
 
 			setProductList(getSortedArr);
 			setDisable(false);
@@ -110,11 +149,10 @@ const App = (): ReactElement => {
 
 				return [equalProduct.id, `${equalProduct.label}`];
 			});
+
 			// console.log('sortedProducts', sortedProducts);
 
 			sortedProducts.forEach(async (product, index) => {
-				// console.log('product[1]', product[1]);
-
 				const text = wrapText(product[1], width * 0.75, timesRomanFont, 6);
 				const countOrder: number = text.includes('упак') ? parseInt(text.slice(-11)) : 0;
 				console.log(countOrder);

@@ -1,15 +1,14 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
+import { PDFDocument, PDFFont } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Progress } from 'rsuite';
+import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { Loader } from './components/loader';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from './constants';
-import { Font } from '@pdf-lib/standard-fonts';
 import { OzonFields } from './components/ozon-fields';
 
 interface ProductGroup {
@@ -27,7 +26,6 @@ export const App = (): ReactElement => {
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
-    const [defaultPdfWidth, setDefaultPdfWidth] = useState(0);
 
     const [pdfDocument, setPdfDocument] = useState<PDFDocument>();
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
@@ -134,7 +132,7 @@ export const App = (): ReactElement => {
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         let pageIds: string[] = [];
-        for (let index = 1; index <= pageCount.length; index++) {
+        for (let index = 1; index <= 5; index++) {
             const id = await getPDFText(pdfBuffer, index);
             setPercent(index);
             pageIds.push(id);
@@ -219,7 +217,6 @@ export const App = (): ReactElement => {
             const pages = pdfDoc.getPages();
             const { width } = pages[0].getMediaBox();
             setPdfPageLength(pages.length);
-            setDefaultPdfWidth(width);
 
             setPdfDocument(pdfDoc);
 
@@ -280,22 +277,36 @@ export const App = (): ReactElement => {
                         </label>
                     </div>
                     <div className="input-block">
-                        <label htmlFor="PDF" className="btn">
-                            Выбрать PDF файл
-                            <input
-                                type="file"
-                                onChange={handlePDFSelected}
-                                placeholder="Choose 11"
-                                accept="application/pdf"
-                                className="PDF-file"
-                                id="PDF"
-                                name="PDF_file"
-                                disabled={disable || loading}
-                            />
-                        </label>
+                        <Whisper
+                            placement="top"
+                            controlId={`control-id-hover`}
+                            trigger="hover"
+                            speaker={
+                                <Tooltip>
+                                    Сначала загрузите EXCEL файл!
+                                </Tooltip>
+                            }
+                        >
+                            <label htmlFor="PDF" className="btn" aria-disabled>
+                                Выбрать PDF файл
+                                <input
+                                    type="file"
+                                    onChange={handlePDFSelected}
+                                    placeholder="Choose 11"
+                                    accept="application/pdf"
+                                    className="PDF-file"
+                                    id="PDF"
+                                    name="PDF_file"
+                                    disabled={disable || loading}
+                                />
+                            </label>
+                        </Whisper>
                     </div>
-                    <button className="button" disabled={!finalPDF} type="button" onClick={onClick}>
+
+                    <button className="button" disabled={!finalPDF} type="button" onClick={() => onClick()}>
                         Скачать
+                        {/* <Progress.Circle /> */}
+                        <Loader />
                     </button>
                 </div>
                 {!disable && (

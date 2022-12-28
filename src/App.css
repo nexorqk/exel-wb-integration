@@ -117,6 +117,14 @@
     cursor: pointer;
 }
 
+.disableBtn {
+    background: #c9b0e0;
+}
+
+.activeBtn {
+    background: #8a2be2;
+}
+
 .progress,
 .excel-downloaded {
     display: flex;

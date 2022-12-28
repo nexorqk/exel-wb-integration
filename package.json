@@ -1,6 +1,7 @@
 {
   "name": "exel-wb-integration",
   "version": "0.1.0",
+  "homepage": "https://nexorqk.github.io/exel-wb-integration",
   "private": true,
   "homepage": "https://nexorqk.github.io/exel-wb-integration",
   "type": "module",
@@ -53,7 +54,7 @@
   },
   "devDependencies": {
     "@types/react-pdf": "^6.2.0",
-    "gh-pages": "4.0.0",
+    "gh-pages": "^4.0.0",
     "i": "^0.3.7",
     "npm": "^9.2.0",
     "worker-loader": "^3.0.8"

@@ -1,15 +1,15 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { Loader } from './components/loader';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
-import './App.css';
+import { Loader } from '../loader';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from '../../utils';
+import '../../App';
 import 'rsuite/dist/rsuite.min.css';
-import { FONT_URL, Multiplier } from './constants';
-import { OzonFields } from './components/ozon-fields';
+import { FONT_URL, Multiplier } from '../../constants';
+import { Font } from '@pdf-lib/standard-fonts';
 
 interface ProductGroup {
     id: string[] | [];
@@ -19,24 +19,21 @@ interface ProductGroup {
     text: string;
 }
 
-export const App = (): ReactElement => {
-    const [productList, setProductList] = useState(null) as any;
-    const [getPdfData, setGetPdfData] = useState(false);
+export const OzonFields = (): ReactElement => {
+    const [ozonProductList, ozonSetProductList] = useState(null) as any;
+    const [getOzonPdfData, setGetOzonPdfData] = useState(false);
     const [pdfPageLength, setPdfPageLength] = useState(0) as any;
     const [loading, setLoading] = useState(false);
-    const [disable, setDisable] = useState(true);
-    const [percent, setPercent] = useState(0);
+    const [disableOzon, setDisableOzon] = useState(true);
+    const [percentOzon, setPercentOzon] = useState(0);
+    const [defaultPdfWidth, setDefaultPdfWidth] = useState(0);
 
     const [pdfDocument, setPdfDocument] = useState<PDFDocument>();
-    const [finalPDF, setFinalPDF] = useState<PDFDocument>();
-    const [objectUrl, setObjectUrl] = useState('');
+    const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
+    const [objectUrlOzon, setObjectUrl] = useState('');
     const [blob, setBlob] = useState<Blob>();
-    const status = percent === pdfPageLength ? 'success' : 'active';
-    const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
-
-    // if (loading) {
-    //   return <Loader />;
-    // }
+    const status = percentOzon === pdfPageLength ? 'success' : 'active';
+    const color = percentOzon === pdfPageLength ? '#8a2be2' : '#02749C';
 
     // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
@@ -44,8 +41,8 @@ export const App = (): ReactElement => {
     });
     // eslint-disable-next-line react-hooks/rules-of-hooks
     // useEffect(() => {
-    //   console.log(finalPDF);
-    // }, [finalPDF]);
+    //   console.log(finalPDFOzon);
+    // }, [finalPDFOzon]);
 
     const getSortedArray = () => {
         const getCountOrder = (text: string) => {
@@ -75,7 +72,7 @@ export const App = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map((el: { id: any; label: string }) => ({
+        const arr = ozonProductList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
@@ -95,10 +92,7 @@ export const App = (): ReactElement => {
         const sortedArray = result.map((el: any) => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)
-
-      1 шт - ${el.label}
-      `,
+            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
         }));
 
         return sortedArray;
@@ -125,17 +119,20 @@ export const App = (): ReactElement => {
             }
             return allPages;
         };
+        // const pages = pdfDocument.getPages();
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
+            // for (let index = 1; index <= pageCount; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            setPercent(index);
+            setPercentOzon(index);
             pageIds.push(id);
         }
         let num = 0;
 
+        // debugger;
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
@@ -164,6 +161,8 @@ export const App = (): ReactElement => {
 
             pagesForGroup.forEach((page, index) => {
                 for (let i = 0; i < multiplier; i++) {
+                    //@ts-ignore
+
                     finalPdf.addPage(page);
                 }
             });
@@ -191,8 +190,8 @@ export const App = (): ReactElement => {
 
             const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
 
-            setProductList(getSortedArr);
-            setDisable(false);
+            ozonSetProductList(getSortedArr);
+            setDisableOzon(false);
         };
     };
 
@@ -214,33 +213,36 @@ export const App = (): ReactElement => {
             const pages = pdfDoc.getPages();
             const { width } = pages[0].getMediaBox();
             setPdfPageLength(pages.length);
+            setDefaultPdfWidth(width);
 
             setPdfDocument(pdfDoc);
 
             const productGroups = getSortedArray();
-            const finalPDF = await generateFinalPDF(
+            const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
-                Multiplier.WILDBERRIES,
+                Multiplier.OZON,
             );
-            setFinalPDF(finalPDF);
+            setFinalPDFOzon(finalPDFOzon);
 
             // window.download(base64DataUri, "1-1.pdf", "application/pdf");
             // console.log('end of onloadend');
         };
 
-        setGetPdfData(true);
-        setDisable(true);
+        setGetOzonPdfData(true);
+        setDisableOzon(true);
+        // debugger;
     };
 
     const onClick = async () => {
-        if (finalPDF) {
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
+        if (finalPDFOzon) {
+            if (objectUrlOzon) {
+                URL.revokeObjectURL(objectUrlOzon);
             }
-            const pdfBytes = await finalPDF.save();
+            // const pdfBytes = await finalPDFOzon.save({ useObjectStreams: false });
+            const pdfBytes = await finalPDFOzon.save();
             const pdfBlob = new Blob([pdfBytes]);
 
             setObjectUrl(URL.createObjectURL(pdfBlob));
@@ -254,89 +256,73 @@ export const App = (): ReactElement => {
     };
 
     return (
-        <div className="root">
-            <h1 className="logo-title">WB OZON Stickers</h1>
-            <aside className="rules-article">
-                <ul style={{ listStyle: 'decimal' }}>
-                    <li>Загрузите Excel-файл</li>
-                    <li>Загрузите PDF-файл</li>
-                    <li>Дождитесь загрузки</li>
-                    <li>Нажмите на кнопку Скачать</li>
-                </ul>
-            </aside>
-            <div className="section">
-                <h2>Wildberries Stickers:</h2>
-                <div className="row App">
-                    <div className="input-block">
-                        <label htmlFor="XLSX" className="btn">
-                            Выбрать Excel файл
+        <div style={{ marginTop: 40 }}>
+            <h2>Ozon Stickers:</h2>
+            <div className="row App">
+                <div className="input-block">
+                    <label htmlFor="XLSX_Ozon" className="btn">
+                        Выбрать Excel файл
+                    </label>
+                    <input
+                        type="file"
+                        onChange={handleXLSXSelected}
+                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        className="XLSX-file"
+                        id="XLSX_Ozon"
+                        name="XLSX_Ozon_file"
+                        disabled={loading}
+                    />
+                </div>
+
+                <div className="input-block">
+                    <Whisper
+                        placement="top"
+                        controlId={`control-id-hover`}
+                        trigger="hover"
+                        speaker={disableOzon ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <></>}
+                    >
+                        <label htmlFor="PDF_Ozon" className="btn">
+                            Выбрать PDF файл
                             <input
                                 type="file"
-                                onChange={handleXLSXSelected}
-                                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                className="XLSX-file"
-                                id="XLSX"
-                                name="XLSX_file"
-                                disabled={loading}
+                                onChange={handlePDFSelected}
+                                placeholder="Choose 11"
+                                accept="application/pdf"
+                                className="PDF-file"
+                                id="PDF_Ozon"
+                                name="PDF_Ozon_file"
+                                disabled={disableOzon || loading}
                             />
                         </label>
-                    </div>
-                    <div className="input-block">
-                        <Whisper
-                            placement="top"
-                            controlId={`control-id-hover`}
-                            trigger="hover"
-                            speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <></>}
-                        >
-                            <label htmlFor="PDF" className="btn" aria-disabled>
-                                Выбрать PDF файл
-                                <input
-                                    type="file"
-                                    onChange={handlePDFSelected}
-                                    placeholder="Choose 11"
-                                    accept="application/pdf"
-                                    className="PDF-file"
-                                    id="PDF"
-                                    name="PDF_file"
-                                    disabled={disable || loading}
-                                />
-                            </label>
-                        </Whisper>
-                    </div>
-
-                    <button className="button" disabled={!finalPDF} type="button" onClick={() => onClick()}>
-                        Скачать
-                        {/* <Progress.Circle /> */}
-                    </button>
+                    </Whisper>
                 </div>
-                {/* <Loader /> */}
-                {!disable && (
-                    <div className="excel-downloaded">
-                        <div className="excel-downloaded-bar">
-                            <p className="excel-downloaded-label">Excel файл был загружен!</p>
-                        </div>
-                    </div>
-                )}
-                {getPdfData && (
-                    <div className="progress">
-                        <div className="progress-bar">
-                            <label className="progress-label" htmlFor="progress">
-                                {status !== 'success' ? 'Active' : 'Downloaded'}
-                            </label>
-                            <Progress.Line
-                                percent={percent}
-                                id="progress"
-                                className="progress-line"
-                                strokeColor={color}
-                                status={status}
-                            />
-                        </div>
-                    </div>
-                )}
+                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
+                    Скачать
+                </button>
             </div>
-            <div className="section">
-                <OzonFields />
-            </div>
+            {!disableOzon && (
+                <div className="excel-downloaded">
+                    <div className="excel-downloaded-bar">
+                        <p className="excel-downloaded-label">Excel файл был загружен!</p>
+                    </div>
+                </div>
+            )}
+            {getOzonPdfData && (
+                <div className="progress">
+                    <div className="progress-bar">
+                        <label className="progress-label" htmlFor="progress">
+                            {status !== 'success' ? 'Active' : 'Downloaded'}
+                        </label>
+                        <Progress.Line
+                            percent={percentOzon}
+                            id="progress"
+                            className="progress-line"
+                            strokeColor={color}
+                            status={status}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

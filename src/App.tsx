@@ -286,7 +286,7 @@ export const App = (): ReactElement => {
                             placement="top"
                             controlId={`control-id-hover`}
                             trigger="hover"
-                            speaker={<Tooltip>Сначала загрузите EXCEL файл!</Tooltip>}
+                            speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <></>}
                         >
                             <label htmlFor="PDF" className="btn" aria-disabled>
                                 Выбрать PDF файл

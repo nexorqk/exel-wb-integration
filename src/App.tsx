@@ -27,10 +27,8 @@ export const App = (): ReactElement => {
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
 
-    const [pdfDocument, setPdfDocument] = useState<PDFDocument>();
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
-    const [blob, setBlob] = useState<Blob>();
     const status = percent === pdfPageLength ? 'success' : 'active';
     const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
 
@@ -134,13 +132,12 @@ export const App = (): ReactElement => {
             setPercent(index);
             pageIds.push(id);
         }
-        let num = 0;
 
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizePdfPages(pages);
-            const { width } = pages[0].getMediaBox();
+            // const { width } = pages[0].getMediaBox();
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
@@ -201,7 +198,6 @@ export const App = (): ReactElement => {
 
         if (e.target.files) {
             reader.readAsArrayBuffer(e.target.files[0]);
-            setBlob(e.target.files[0]);
         }
 
         reader.onload = async () => {
@@ -212,10 +208,8 @@ export const App = (): ReactElement => {
             // console.log('timesRomanFont', timesRomanFont);
 
             const pages = pdfDoc.getPages();
-            const { width } = pages[0].getMediaBox();
+            // const { width } = pages[0].getMediaBox();
             setPdfPageLength(pages.length);
-
-            setPdfDocument(pdfDoc);
 
             const productGroups = getSortedArray();
             const finalPDF = await generateFinalPDF(

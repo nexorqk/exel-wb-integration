@@ -46,7 +46,6 @@ export const App = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('упак')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-                    // console.log("countOrder", countOrder);
                     return +countOrder;
                 }
             }
@@ -56,7 +55,6 @@ export const App = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('уп.')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-                    // console.log("countOrder - 2", countOrder);
                     return +countOrder;
                 }
             }
@@ -121,7 +119,6 @@ export const App = (): ReactElement => {
             const id = await getPDFText(pdfBuffer, index);
             let getPercent = 100 / pageCount.length
             setPercent(getPercent * index);
-            console.log(100 / pageCount.length);
 
             pageIds.push(id);
         }
@@ -130,7 +127,6 @@ export const App = (): ReactElement => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizePdfPages(pages);
-            // const { width } = pages[0].getMediaBox();
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
@@ -155,7 +151,6 @@ export const App = (): ReactElement => {
                 }
             });
         });
-        // console.log('end generateFinalPDF ');
 
         return finalPdf;
     };

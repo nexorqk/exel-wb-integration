@@ -92,7 +92,6 @@ export const App = (): ReactElement => {
             }, {} as any),
         );
 
-        console.log('result: ', result);
         const sortedArray = result.map((el: any) => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
@@ -130,7 +129,7 @@ export const App = (): ReactElement => {
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         let pageIds: string[] = [];
-        for (let index = 1; index <= 5; index++) {
+        for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
             setPercent(index);
             pageIds.push(id);
@@ -159,9 +158,9 @@ export const App = (): ReactElement => {
                     }
                 }
             }
-            console.log(pagesForGroup);
+            // console.log(pagesForGroup);
 
-            console.log('pages for group', (num += 1), pagesForGroup);
+            // console.log('pages for group', (num += 1), pagesForGroup);
 
             pagesForGroup.forEach((page, index) => {
                 for (let i = 0; i < multiplier; i++) {
@@ -169,7 +168,7 @@ export const App = (): ReactElement => {
                 }
             });
         });
-        console.log('end generateFinalPDF ');
+        // console.log('end generateFinalPDF ');
 
         return finalPdf;
     };
@@ -210,7 +209,7 @@ export const App = (): ReactElement => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-            console.log('timesRomanFont', timesRomanFont);
+            // console.log('timesRomanFont', timesRomanFont);
 
             const pages = pdfDoc.getPages();
             const { width } = pages[0].getMediaBox();
@@ -229,7 +228,7 @@ export const App = (): ReactElement => {
             setFinalPDF(finalPDF);
 
             // window.download(base64DataUri, "1-1.pdf", "application/pdf");
-            console.log('end of onloadend');
+            // console.log('end of onloadend');
         };
 
         setGetPdfData(true);

@@ -124,7 +124,7 @@ export const OzonFields = (): ReactElement => {
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         let pageIds: string[] = [];
-        for (let index = 1; index <= 5; index++) {
+        for (let index = 1; index <= pageCount.length; index++) {
             // for (let index = 1; index <= pageCount; index++) {
             const id = await getPDFText(pdfBuffer, index);
             setPercent(index);
@@ -253,16 +253,6 @@ export const OzonFields = (): ReactElement => {
             alink.download = 'SamplePDF.pdf';
             alink.click();
         }
-
-        // try {
-        //   if (finalPDF) {
-        //     const pdfBytes = await finalPDF.save();
-        //     //@ts-ignore
-        //     window.download(pdfBytes, "1-1.pdf", "application/pdf");
-        //   }
-        // } catch (error) {
-        //   console.log(error);
-        //   }
     };
 
     return (

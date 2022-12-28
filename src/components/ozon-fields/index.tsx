@@ -184,8 +184,8 @@ export const OzonFields = (): ReactElement => {
             const data = XLSX.utils.sheet_to_json(ws);
 
             const getArgs = data.map((el: any) => ({
-                id: el['Стикер'].slice(-4),
-                label: el['Название товара'],
+                id: el['Номер заказа'].slice(-4),
+                label: el['Наименование товара'],
             }));
 
             const getSortedArr = getArgs.sort((a, b) => a.id - b.id);

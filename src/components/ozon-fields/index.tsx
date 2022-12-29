@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';

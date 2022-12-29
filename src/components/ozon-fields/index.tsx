@@ -115,7 +115,7 @@ export const OzonFields = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            let getPercent = 100 / pageCount.length
+            let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
 
             pageIds.push(id);
@@ -143,10 +143,8 @@ export const OzonFields = (): ReactElement => {
                 }
             }
 
-
             pagesForGroup.forEach((page, index) => {
                 for (let i = 0; i < multiplier; i++) {
-
                     finalPdf.addPage(page);
                 }
             });
@@ -289,7 +287,7 @@ export const OzonFields = (): ReactElement => {
                             percent={+percentOzon.toFixed(2)}
                             id="progress"
                             className="progress-line"
-                                strokeColor={color}
+                            strokeColor={color}
                             status={status}
                         />
                     </div>

@@ -289,7 +289,7 @@ export const OzonFields = (): ReactElement => {
                             percent={+percentOzon.toFixed(2)}
                             id="progress"
                             className="progress-line"
-                            strokeColor={color}
+                                strokeColor={color}
                             status={status}
                         />
                     </div>

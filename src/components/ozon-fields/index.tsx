@@ -4,7 +4,7 @@ import { PDFDocument, PDFFont, PDFPage, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getOzonPDFText } from '../../utils';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc } from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from '../../constants';
@@ -29,6 +29,32 @@ export const OzonFields = (): ReactElement => {
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
+
+    const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
+        const doc = await pdfjs.getDocument(file).promise;
+        const page = await doc.getPage(number);
+        let args: any = [];
+        page.getTextContent().then(function (content) {
+            // debugger;
+            const strings = content.items.map(function (item) {
+                //@ts-ignore
+                return item;
+            });
+            args.push(strings);
+            // page.cleanup();
+            // debugger;
+            return strings;
+        });
+        console.log(args);
+        return args;
+        // const test = await page.getTextContent();
+
+        // const items = test.items as TextItem[];
+        // console.log(items);
+        // const item: TextItem | undefined = items.find(item => item.str.length === 4);
+
+        // return item?.str;
+    };
 
     const getSortedArray = (productList: ProductList) => {
         const getCountOrder = (text: string) => {

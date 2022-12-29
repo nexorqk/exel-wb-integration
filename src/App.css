@@ -1,4 +1,10 @@
 @import 'rsuite/dist/rsuite.css';
+
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
 .root {
     display: flex;
     flex-direction: column;

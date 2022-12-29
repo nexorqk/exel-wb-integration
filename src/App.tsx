@@ -20,6 +20,8 @@ export const App = (): ReactElement => {
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+    const [pdfTextArray, setPdfTextArray] = useState<String[]>();
+
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
     const status = percent === 100 ? 'success' : 'active';
@@ -56,7 +58,9 @@ export const App = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map(el => ({
+        
+
+        const arr = productList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
@@ -81,14 +85,14 @@ export const App = (): ReactElement => {
 
           1 шт - ${el.label}
           `,
-        }));
+        }));        
 
         return sortedArray;
     };
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
-        productGroups: ProductGroup[],
+        // productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
         multiplier: number,
@@ -118,6 +122,18 @@ export const App = (): ReactElement => {
 
             if (id) pageIds.push(id);
         }
+        
+        setPdfTextArray(pageIds)
+
+        const getSortedProductList = pageIds.map(id => {
+            const equalProduct = productList.find((product: any) => {
+                return product.id === id;
+            });
+
+            return {id: equalProduct?.id, label: equalProduct?.label};
+        });
+        
+        const productGroups = getSortedArray(getSortedProductList as any);
 
         productGroups.forEach(async group => {
             finalPdf.addPage();
@@ -191,10 +207,9 @@ export const App = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            const productGroups = getSortedArray(productList);
+            // const productGroups = getSortedArray(productList);
             const finalPDF = await generateFinalPDF(
                 pdfDoc,
-                productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
                 Multiplier.WILDBERRIES,

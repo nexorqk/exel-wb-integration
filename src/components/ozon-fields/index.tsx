@@ -110,10 +110,12 @@ export const OzonFields = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
+
+            if (id) pageIds.push(id);
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
 
-            if (id) pageIds.push(id);
+            pageIds.push(id!);
         }
 
         productGroups.forEach(async group => {
@@ -189,6 +191,7 @@ export const OzonFields = (): ReactElement => {
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
             const productGroups = getSortedArray(ozonProductList);
+            // const productGroups = getSortedArray();
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 productGroups,
@@ -206,11 +209,12 @@ export const OzonFields = (): ReactElement => {
         setLoading(false);
     };
 
-    const onClick = () => {
+    const onClick = async () => {
         if (finalPDFOzon && pdfBytes) {
             if (objectUrlOzon) {
                 URL.revokeObjectURL(objectUrlOzon);
             }
+            const pdfBytes = await finalPDFOzon.save();
             const pdfBlob = new Blob([pdfBytes]);
             setObjectUrl(URL.createObjectURL(pdfBlob));
             const fileURL = window.URL.createObjectURL(pdfBlob);

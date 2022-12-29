@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
@@ -9,32 +9,26 @@ import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from '../../constants';
 
-interface ProductGroup {
-    id: string[] | [];
-    label: string;
-    count: number;
-    countOrder: number;
-    text: string;
-}
+import { ProductGroup, ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
 
 export const OzonFields = (): ReactElement => {
-    const [ozonProductList, ozonSetProductList] = useState(null) as any;
+    const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
     const [getOzonPdfData, setGetOzonPdfData] = useState(false);
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
     const [percentOzon, setPercentOzon] = useState(0);
-
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [objectUrlOzon, setObjectUrl] = useState('');
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
+    const [pdfPageLength, setPdfPageLength] = useState(0);
+    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
 
-    const getSortedArray = () => {
+    const getSortedArray = (productList: ProductList) => {
         const getCountOrder = (text: string) => {
             const splitText = text.split(' ');
             const bl = splitText.includes('упаковок');
@@ -45,7 +39,7 @@ export const OzonFields = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('упак')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-                    // console.log("countOrder", countOrder);
+
                     return +countOrder;
                 }
             }
@@ -55,31 +49,32 @@ export const OzonFields = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('уп.')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-                    // console.log("countOrder - 2", countOrder);
+
                     return +countOrder;
                 }
             }
             return 1;
         };
 
-        const arr = ozonProductList.map((el: { id: any; label: string }) => ({
+        const arr = productList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
         }));
 
         const result = Object.values(
-            arr.reduce((acc: any, item: { label: string | number; id: ConcatArray<never> }) => {
+            arr.reduce((acc: Accomulator, item: AccomulatorItem) => {
                 if (!acc[item.label])
                     acc[item.label] = {
                         ...item,
                     };
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id);
+                //@ts-ignore
+                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
                 return acc;
-            }, {} as any),
+            }, {}),
         );
 
-        const sortedArray = result.map((el: any) => ({
+        const sortedArray = result.map(el => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
             text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
@@ -118,7 +113,7 @@ export const OzonFields = (): ReactElement => {
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
 
-            pageIds.push(id);
+            if (id) pageIds.push(id);
         }
 
         productGroups.forEach(async group => {
@@ -128,12 +123,13 @@ export const OzonFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
+            let pagesForGroup: PDFPage[] = [];
+
             drawTextOnPages(lastPage, text, timesRomanFont);
-            let result = null;
-            let pagesForGroup = [];
+
             for (let i = 0; i < pageCount.length; i++) {
-                if (typeof group.id === 'string') {
-                    result = pageIds[i] === group.id ? pagesForGroup.push(copiedPages[i]) : null;
+                if (typeof group.id === 'string' && pageIds[i] === group.id) {
+                    pagesForGroup.push(copiedPages[i]);
                 } else {
                     for (let j = 0; j < group.id.length; j++) {
                         if (group.id[j] === pageIds[i]) {
@@ -157,26 +153,29 @@ export const OzonFields = (): ReactElement => {
         const fileReader = new FileReader();
         if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
 
-        fileReader.onload = (e: any) => {
-            const bufferArray = e?.target.result;
-            const wb = XLSX.read(bufferArray, { type: 'buffer' });
-            const wsname = wb.SheetNames[0];
-            const ws = wb.Sheets[wsname];
-            const data = XLSX.utils.sheet_to_json(ws);
+        fileReader.onload = e => {
+            if (e.target) {
+                const bufferArray = e?.target.result;
+                const wb = XLSX.read(bufferArray, { type: 'buffer' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
-            const getArgs = data.map((el: any) => ({
-                id: el['Номер заказа'].slice(-4),
-                label: el['Наименование товара'],
-            }));
+                const getArgs = data.map((el: ExcelRow) => ({
+                    id: el['Номер заказа'].slice(-4),
+                    label: el['Наименование товара'],
+                }));
 
-            const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
+                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 
-            ozonSetProductList(getSortedArr);
-            setDisableOzon(false);
+                ozonSetProductList(getSortedArr);
+                setDisableOzon(false);
+            }
         };
     };
 
     const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLoading(true);
         const reader = new FileReader();
 
         if (e.target.files) {
@@ -189,7 +188,7 @@ export const OzonFields = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            const productGroups = getSortedArray();
+            const productGroups = getSortedArray(ozonProductList);
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 productGroups,
@@ -197,27 +196,24 @@ export const OzonFields = (): ReactElement => {
                 timesRomanFont,
                 Multiplier.OZON,
             );
+            const pdfBytes = await finalPDFOzon.save();
             setFinalPDFOzon(finalPDFOzon);
-
-            // window.download(base64DataUri, "1-1.pdf", "application/pdf");
-            // console.log('end of onloadend');
+            setPdfBytes(pdfBytes);
         };
 
         setGetOzonPdfData(true);
         setDisableOzon(true);
+        setLoading(false);
     };
 
-    const onClick = async () => {
-        if (finalPDFOzon) {
+    const onClick = () => {
+        if (finalPDFOzon && pdfBytes) {
             if (objectUrlOzon) {
                 URL.revokeObjectURL(objectUrlOzon);
             }
-            const pdfBytes = await finalPDFOzon.save();
             const pdfBlob = new Blob([pdfBytes]);
-
             setObjectUrl(URL.createObjectURL(pdfBlob));
             const fileURL = window.URL.createObjectURL(pdfBlob);
-            // Setting various property values
             let alink = document.createElement('a');
             alink.href = fileURL;
             alink.download = 'SamplePDF.pdf';
@@ -281,7 +277,7 @@ export const OzonFields = (): ReactElement => {
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
-                            {status !== 'success' ? 'Active' : 'Downloaded'}
+                            {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
                         </label>
                         <Progress.Line
                             percent={+percentOzon.toFixed(2)}

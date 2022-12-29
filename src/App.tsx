@@ -1,6 +1,6 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
@@ -10,21 +10,16 @@ import { OzonFields } from './components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 
-interface ProductGroup {
-    id: string[] | [];
-    label: string;
-    count: number;
-    countOrder: number;
-    text: string;
-}
+import { ProductGroup, ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 
 export const App = (): ReactElement => {
-    const [productList, setProductList] = useState(null) as any;
+    const [productList, setProductList] = useState<ProductList>([]);
     const [getPdfData, setGetPdfData] = useState(false);
+    const [pdfPageLength, setPdfPageLength] = useState<Number>(0);
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
-
+    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
     const status = percent === 100 ? 'success' : 'active';
@@ -35,7 +30,7 @@ export const App = (): ReactElement => {
         setWorkerSrc(pdfjs);
     });
 
-    const getSortedArray = () => {
+    const getSortedArray = (productList: ProductList) => {
         const getCountOrder = (text: string) => {
             const splitText = text.split(' ');
             const bl = splitText.includes('упаковок');
@@ -61,30 +56,31 @@ export const App = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map((el: { id: any; label: string }) => ({
+        const arr = productList.map(el => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
         }));
 
         const result = Object.values(
-            arr.reduce((acc: any, item: { label: string | number; id: ConcatArray<never> }) => {
+            arr.reduce((acc: Accomulator, item: AccomulatorItem) => {
                 if (!acc[item.label])
                     acc[item.label] = {
                         ...item,
                     };
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id);
+                //@ts-ignore
+                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
                 return acc;
-            }, {} as any),
+            }, {}),
         );
 
-        const sortedArray = result.map((el: any) => ({
+        const sortedArray = result.map(el => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
             text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)
 
-      1 шт - ${el.label}
-      `,
+          1 шт - ${el.label}
+          `,
         }));
 
         return sortedArray;
@@ -117,10 +113,10 @@ export const App = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            let getPercent = 100 / pageCount.length
+            let getPercent = 100 / pageCount.length;
             setPercent(getPercent * index);
 
-            pageIds.push(id);
+            if (id) pageIds.push(id);
         }
 
         productGroups.forEach(async group => {
@@ -130,12 +126,13 @@ export const App = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
+            let pagesForGroup: PDFPage[] = [];
+
             drawTextOnPages(lastPage, text, timesRomanFont);
-            let result = null;
-            let pagesForGroup = [];
+
             for (let i = 0; i < pageCount.length; i++) {
-                if (typeof group.id === 'string') {
-                    result = pageIds[i] === group.id ? pagesForGroup.push(copiedPages[i]) : null;
+                if (typeof group.id === 'string' && pageIds[i] === group.id) {
+                    pagesForGroup.push(copiedPages[i]);
                 } else {
                     for (let j = 0; j < group.id.length; j++) {
                         if (group.id[j] === pageIds[i]) {
@@ -159,26 +156,29 @@ export const App = (): ReactElement => {
         const fileReader = new FileReader();
         if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
 
-        fileReader.onload = (e: any) => {
-            const bufferArray = e?.target.result;
-            const wb = XLSX.read(bufferArray, { type: 'buffer' });
-            const wsname = wb.SheetNames[0];
-            const ws = wb.Sheets[wsname];
-            const data = XLSX.utils.sheet_to_json(ws);
+        fileReader.onload = e => {
+            if (e.target) {
+                const bufferArray = e?.target.result;
+                const wb = XLSX.read(bufferArray, { type: 'buffer' });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
-            const getArgs = data.map((el: any) => ({
-                id: el['Стикер'].slice(-4),
-                label: el['Название товара'],
-            }));
+                const getArgs = data.map((el: ExcelRow) => ({
+                    id: el['Стикер'].slice(-4),
+                    label: el['Название товара'],
+                }));
 
-            const getSortedArr = getArgs.sort((a, b) => a.id - b.id);
+                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 
-            setProductList(getSortedArr);
-            setDisable(false);
+                setProductList(getSortedArr);
+                setDisable(false);
+            }
         };
     };
 
     const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setLoading(true);
         const reader = new FileReader();
 
         if (e.target.files) {
@@ -191,7 +191,7 @@ export const App = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            const productGroups = getSortedArray();
+            const productGroups = getSortedArray(productList);
             const finalPDF = await generateFinalPDF(
                 pdfDoc,
                 productGroups,
@@ -199,27 +199,24 @@ export const App = (): ReactElement => {
                 timesRomanFont,
                 Multiplier.WILDBERRIES,
             );
+            const pdfBytes = await finalPDF.save();
             setFinalPDF(finalPDF);
-
-            // window.download(base64DataUri, "1-1.pdf", "application/pdf");
-            // console.log('end of onloadend');
+            setPdfBytes(pdfBytes);
+            setLoading(false);
         };
 
         setGetPdfData(true);
         setDisable(true);
     };
 
-    const onClick = async () => {
-        if (finalPDF) {
+    const onClick = () => {
+        if (finalPDF && pdfBytes) {
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);
             }
-            const pdfBytes = await finalPDF.save();
             const pdfBlob = new Blob([pdfBytes]);
-
             setObjectUrl(URL.createObjectURL(pdfBlob));
             const fileURL = window.URL.createObjectURL(pdfBlob);
-            // Setting various property values
             let alink = document.createElement('a');
             alink.href = fileURL;
             alink.download = 'SamplePDF.pdf';
@@ -282,7 +279,7 @@ export const App = (): ReactElement => {
                         Скачать
                     </button>
                 </div>
-                {/* <Loader /> */}
+
                 {!disable && (
                     <div className="excel-downloaded">
                         <div className="excel-downloaded-bar">
@@ -294,7 +291,7 @@ export const App = (): ReactElement => {
                     <div className="progress">
                         <div className="progress-bar">
                             <label className="progress-label" htmlFor="progress">
-                                {status !== 'success' ? 'Active' : 'Downloaded'}
+                                {!pdfBytes ? 'В процессе...' : 'Готово к скачиванию!'}
                             </label>
                             <Progress.Line
                                 percent={+percent.toFixed(2)}

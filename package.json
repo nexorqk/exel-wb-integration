@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "homepage": "https://nexorqk.github.io/exel-wb-integration",
   "private": true,
+  "homepage": "https://nexorqk.github.io/exel-wb-integration",
   "type": "module",
   "dependencies": {
     "@pdf-lib/fontkit": "^1.1.1",

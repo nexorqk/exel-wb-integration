@@ -4,12 +4,12 @@ import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from '../../utils';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getOzonPDFText } from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from '../../constants';
 
-import { ProductGroup, ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
+import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -23,6 +23,8 @@ export const OzonFields = (): ReactElement => {
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
     const [pdfPageLength, setPdfPageLength] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+
+    const [pdfTextArray, setPdfTextArray] = useState<String[]>();
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -85,7 +87,6 @@ export const OzonFields = (): ReactElement => {
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
-        productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
         multiplier: number,
@@ -109,7 +110,7 @@ export const OzonFields = (): ReactElement => {
 
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
-            const id = await getPDFText(pdfBuffer, index);
+            const id = await getOzonPDFText(pdfBuffer, index);
 
             if (id) pageIds.push(id);
             let getPercent = 100 / pageCount.length;
@@ -117,6 +118,18 @@ export const OzonFields = (): ReactElement => {
 
             pageIds.push(id!);
         }
+
+        setPdfTextArray(pageIds);
+
+        const getSortedProductList = pageIds.map(id => {
+            const equalProduct = ozonProductList.find((product: any) => {
+                return product.id === id;
+            });
+
+            return { id: equalProduct?.id, label: equalProduct?.label };
+        });
+
+        const productGroups = getSortedArray(getSortedProductList as any);
 
         productGroups.forEach(async group => {
             finalPdf.addPage();
@@ -162,9 +175,10 @@ export const OzonFields = (): ReactElement => {
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
+                console.log(data);
 
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Номер заказа'].slice(-4),
+                    id: el['Номер отправления'],
                     label: el['Наименование товара'],
                 }));
 
@@ -190,11 +204,9 @@ export const OzonFields = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            const productGroups = getSortedArray(ozonProductList);
             // const productGroups = getSortedArray();
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
-                productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
                 Multiplier.OZON,
@@ -231,12 +243,12 @@ export const OzonFields = (): ReactElement => {
             <div className="row App">
                 <div className="input-block">
                     <label htmlFor="XLSX_Ozon" className="btn">
-                        Выбрать Excel файл
+                        Выбрать CSV файл
                     </label>
                     <input
                         type="file"
                         onChange={handleXLSXSelected}
-                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        accept=".csv"
                         className="XLSX-file"
                         id="XLSX_Ozon"
                         name="XLSX_Ozon_file"
@@ -249,7 +261,7 @@ export const OzonFields = (): ReactElement => {
                         placement="top"
                         controlId={`control-id-hover`}
                         trigger="hover"
-                        speaker={disableOzon ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
+                        speaker={disableOzon ? <Tooltip>Сначала загрузите CSV файл!</Tooltip> : <div></div>}
                     >
                         <label htmlFor="PDF_Ozon" className="btn">
                             Выбрать PDF файл
@@ -273,7 +285,7 @@ export const OzonFields = (): ReactElement => {
             {!disableOzon && (
                 <div className="excel-downloaded">
                     <div className="excel-downloaded-bar">
-                        <p className="excel-downloaded-label">Excel файл был загружен!</p>
+                        <p className="excel-downloaded-label">CSV файл был загружен!</p>
                     </div>
                 </div>
             )}

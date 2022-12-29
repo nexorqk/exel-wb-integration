@@ -38,14 +38,14 @@ export const OzonFields = (): ReactElement => {
             // debugger;
             const strings = content.items.map(function (item) {
                 //@ts-ignore
-                return item;
+                return item.str;
             });
             args.push(strings);
             // page.cleanup();
             // debugger;
             return strings;
         });
-        console.log(args);
+
         return args;
         // const test = await page.getTextContent();
 
@@ -137,7 +137,6 @@ export const OzonFields = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
-            console.log('id: ', id);
             // if (id) pageIds.push(id);
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);

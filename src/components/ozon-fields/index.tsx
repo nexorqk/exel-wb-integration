@@ -247,7 +247,7 @@ export const OzonFields = (): ReactElement => {
                         placement="top"
                         controlId={`control-id-hover`}
                         trigger="hover"
-                        speaker={disableOzon ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
+                        speaker={disableOzon ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>
                     >
                         <label htmlFor="PDF_Ozon" className="btn">
                             Выбрать PDF файл

@@ -69,21 +69,25 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
 export const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
     const doc = await pdfjs.getDocument(file).promise;
     const page = await doc.getPage(number);
-    page.getTextContent()
-        .then(function (content) {
-            const strings = content.items.map(function (item) {
-                //@ts-ignore
-                return item.str as any;
-            });
-            console.log('## Text Content');
-            console.log('strings', strings);
-            page.cleanup();
-        })
-    const test = await page.getTextContent();
+    let args: any = [];
+    page.getTextContent().then(function (content) {
+        // debugger;
+        const strings = content.items.map(function (item) {
+            //@ts-ignore
+            return item;
+        });
+        args.push(strings);
+        // page.cleanup();
+        // debugger;
+        return strings;
+    });
 
-    const items = test.items as TextItem[];
+    return args;
+    // const test = await page.getTextContent();
+
+    // const items = test.items as TextItem[];
     // console.log(items);
-    const item: TextItem | undefined = items.find(item => item.str.length === 4);
+    // const item: TextItem | undefined = items.find(item => item.str.length === 4);
 
-    return item?.str;
+    // return item?.str;
 };

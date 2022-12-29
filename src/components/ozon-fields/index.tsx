@@ -111,13 +111,15 @@ export const OzonFields = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
-
-            if (id) pageIds.push(id);
+            console.log('id: ', id);
+            // if (id) pageIds.push(id);
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
 
             pageIds.push(id!);
         }
+
+        console.log(pageIds);
 
         setPdfTextArray(pageIds);
 

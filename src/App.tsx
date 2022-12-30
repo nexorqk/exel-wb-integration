@@ -5,10 +5,11 @@ import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
-import './App.css';
-import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
+import './App.css';
+import 'rsuite/dist/rsuite.min.css';
+
 import { ProductGroup, ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 
 export const App = (): ReactElement => {
@@ -19,12 +20,14 @@ export const App = (): ReactElement => {
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+    const [pdfTextArray, setPdfTextArray] = useState<String[]>();
+
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
+    const status = percent === 100 ? 'success' : 'active';
+    const color = percent === 100 ? '#8a2be2' : '#02749C';
 
-    const status = percent === pdfPageLength ? 'success' : 'active';
-    const color = percent === pdfPageLength ? '#8a2be2' : '#02749C';
-
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
@@ -40,7 +43,6 @@ export const App = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('упак')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-
                     return +countOrder;
                 }
             }
@@ -50,14 +52,13 @@ export const App = (): ReactElement => {
                     const prevValue = splitText.filter(el => el.includes('уп.')).join();
                     const curIndex = splitText.indexOf(prevValue);
                     const countOrder = splitText[curIndex - 1];
-
                     return +countOrder;
                 }
             }
             return 1;
         };
 
-        const arr = productList.map(el => ({
+        const arr = productList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
@@ -78,9 +79,9 @@ export const App = (): ReactElement => {
         const sortedArray = result.map(el => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)
-
-          1 шт - ${el.label}
+            text: `${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов
+            
+            ${el.label}
           `,
         }));
 
@@ -89,7 +90,7 @@ export const App = (): ReactElement => {
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
-        productGroups: ProductGroup[],
+        // productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
         multiplier: number,
@@ -114,15 +115,31 @@ export const App = (): ReactElement => {
         let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            setPercent(index);
+            let getPercent = 100 / pageCount.length;
+            setPercent(getPercent * index);
+
             if (id) pageIds.push(id);
         }
+
+        console.log(pageIds);
+        
+
+        setPdfTextArray(pageIds);
+
+        const getSortedProductList = pageIds.map(id => {
+            const equalProduct = productList.find((product: any) => {
+                return product.id === id;
+            });
+
+            return { id: equalProduct?.id, label: equalProduct?.label };
+        });
+
+        const productGroups = getSortedArray(getSortedProductList as any);
 
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizePdfPages(pages);
-
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
@@ -165,7 +182,7 @@ export const App = (): ReactElement => {
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Стикер'].slice(-4),
+                    id: el['Стикер'],
                     label: el['Название товара'],
                 }));
 
@@ -191,14 +208,9 @@ export const App = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            const pages = pdfDoc.getPages();
-
-            setPdfPageLength(pages.length);
-
-            const productGroups = getSortedArray(productList);
+            // const productGroups = getSortedArray(productList);
             const finalPDF = await generateFinalPDF(
                 pdfDoc,
-                productGroups,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
                 Multiplier.WILDBERRIES,
@@ -298,7 +310,7 @@ export const App = (): ReactElement => {
                                 {!pdfBytes ? 'В процессе...' : 'Готово к скачиванию!'}
                             </label>
                             <Progress.Line
-                                percent={percent}
+                                percent={+percent.toFixed(2)}
                                 id="progress"
                                 className="progress-line"
                                 strokeColor={color}

@@ -4,10 +4,10 @@ import { PDFDocument, PDFFont, PDFPage, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc } from '../../utils';
+import { wrapText, drawTextOnPages, setWorkerSrc, resizeOzonPdfPages, drawTextOnPagesOzon } from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
-import { FONT_URL, Multiplier } from '../../constants';
+import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
 
@@ -36,7 +36,7 @@ export const OzonFields = (): ReactElement => {
         const item = await page.getTextContent();
         //@ts-ignore
         const oneArgs = { id: item.items[4].str };
-        //@ts-ignore
+        //@ts-ignore'
         pageIds.push(oneArgs);
     };
 
@@ -86,10 +86,9 @@ export const OzonFields = (): ReactElement => {
             for (let i = 0; i < pageCount.length; i++) {
                 allPages.push(i);
             }
-            
+
             return allPages;
         };
-
 
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
@@ -112,24 +111,28 @@ export const OzonFields = (): ReactElement => {
         console.log(getSortedProductList);
 
         const productGroups = getSortedProductList; //getSortedProductList
-        
+
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
         //@ts-ignore
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
-            resizePdfPages(pages);
+            resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             //@ts-ignore
-            const text = wrapText(group.label, 400, font, 25);
+            const text = wrapText(group.label, 200, font, 20).replace(/\//gm, '');
             let pagesForGroup: PDFPage[] = [];
 
-            drawTextOnPages(lastPage, text, timesRomanFont);
+            drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
                 //@ts-ignore
-                if (typeof group.id === 'string' && pageIds[i] === group.id) {
+                // console.log(`pageIds [${i}]`, pageIds[i].id);
+                //@ts-ignore
+                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
+                    // not working
+                    // console.log('groupId:', group.id, `pageIds [${i}]`, pageIds[i]);
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     //@ts-ignore
@@ -143,7 +146,7 @@ export const OzonFields = (): ReactElement => {
             }
 
             pagesForGroup.forEach((page, index) => {
-                for (let i = 1; i < 3; i++) {
+                for (let i = 0; i < multiplier; i++) {
                     finalPdf.addPage(page);
                 }
             });

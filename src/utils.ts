@@ -62,7 +62,7 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
     const test = await page.getTextContent();
     const items = test.items as TextItem[];
     const item: TextItem | undefined = items.find(item => item.str);
-    console.log('item', item);
-    
-    return item?.str;
+    const itemLast: TextItem | undefined = items.find(item => item.str.length === 4);
+
+    return `${item?.str}${itemLast?.str}`;
 };

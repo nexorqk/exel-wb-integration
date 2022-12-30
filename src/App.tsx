@@ -182,7 +182,7 @@ export const App = (): ReactElement => {
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Стикер'].slice(0, 6),
+                    id: el['Стикер'],
                     label: el['Название товара'],
                 }));
 

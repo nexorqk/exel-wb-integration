@@ -21,8 +21,8 @@ export const OzonFields = (): ReactElement => {
     const [objectUrlOzon, setObjectUrl] = useState('');
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
-    const [pdfPageLength, setPdfPageLength] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+    const [ozonOrderData, setOzonOrderData] = useState([]);
 
     const [pdfTextArray, setPdfTextArray] = useState<String[]>();
 
@@ -30,85 +30,45 @@ export const OzonFields = (): ReactElement => {
         setWorkerSrc(pdfjs);
     });
 
+    let pageIds: string[] = [];
+
     const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
         const doc = await pdfjs.getDocument(file).promise;
         const page = await doc.getPage(number);
-        let args: any = [];
-        page.getTextContent().then(function (content) {
-            // debugger;
-            const strings = content.items.map(function (item) {
-                //@ts-ignore
-                return item.str;
-            });
-            args.push(strings);
-            // page.cleanup();
-            // debugger;
-            return strings;
-        });
 
-        return args;
-        // const test = await page.getTextContent();
-
-        // const items = test.items as TextItem[];
-        // console.log(items);
-        // const item: TextItem | undefined = items.find(item => item.str.length === 4);
-
-        // return item?.str;
+        const item = await page.getTextContent();
+        //@ts-ignore
+        const oneArgs = { id: item.items[4].str };
+        //@ts-ignore
+        pageIds.push(oneArgs);
     };
 
     const getSortedArray = (productList: ProductList) => {
-        const getCountOrder = (text: string) => {
-            const splitText = text.split(' ');
-            const bl = splitText.includes('упаковок');
-            splitText.includes('упаковка');
-            splitText.includes('упаковки');
-            if (bl) {
-                for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter(el => el.includes('упак')).join();
-                    const curIndex = splitText.indexOf(prevValue);
-                    const countOrder = splitText[curIndex - 1];
-
-                    return +countOrder;
-                }
-            }
-
-            if (splitText.includes('уп.')) {
-                for (let i = 0; i < splitText.length; i++) {
-                    const prevValue = splitText.filter(el => el.includes('уп.')).join();
-                    const curIndex = splitText.indexOf(prevValue);
-                    const countOrder = splitText[curIndex - 1];
-
-                    return +countOrder;
-                }
-            }
-            return 1;
-        };
-
         const arr = productList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
-            count: getCountOrder(el.label),
+            // count: getCountOrder(el.label),
         }));
 
-        const result = Object.values(
-            arr.reduce((acc: Accomulator, item: AccomulatorItem) => {
-                if (!acc[item.label])
-                    acc[item.label] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
-                return acc;
-            }, {}),
-        );
+        // const result = Object.values(
+        //     arr.reduce((acc: Accomulator, item: AccomulatorItem) => {
+        //         if (!acc[item.label])
+        //             acc[item.label] = {
+        //                 ...item,
+        //             };
+        //         //@ts-ignore
+        //         else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
+        //         return acc;
+        //     }, {}),
+        // );
 
-        const sortedArray = result.map(el => ({
-            ...el,
-            countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
-        }));
+        // const sortedArray = result.map(el => ({
+        //     ...el,
+        //     countOrder: typeof el.id === 'string' ? 1 : el.id.length,
+        //     text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
+        // }));
 
-        return sortedArray;
+        // return sortedArray;
     };
 
     const generateFinalPDF = async (
@@ -134,30 +94,26 @@ export const OzonFields = (): ReactElement => {
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
-        let pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
-            // if (id) pageIds.push(id);
+
+            if (id as any) pageIds.push(id as any);
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
-
-            pageIds.push(id!);
         }
+        console.log('pageIds', pageIds);
 
-        console.log(pageIds);
-
-        setPdfTextArray(pageIds);
+        console.log('ozonProductList', ozonProductList);
 
         const getSortedProductList = pageIds.map(id => {
-            const equalProduct = ozonProductList.find((product: any) => {
-                return product.id === id;
-            });
+            const equalProduct = ozonProductList.find((pr: any) => id === pr.id)
+            console.log(equalProduct);
 
             return { id: equalProduct?.id, label: equalProduct?.label };
         });
 
-        const productGroups = getSortedArray(getSortedProductList as any);
-
+        const productGroups = getSortedArray(ozonProductList as any); //getSortedProductList
+        //@ts-ignore
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();

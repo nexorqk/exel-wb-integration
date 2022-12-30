@@ -22,9 +22,6 @@ export const OzonFields = (): ReactElement => {
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-    const [ozonOrderData, setOzonOrderData] = useState([]);
-
-    const [pdfTextArray, setPdfTextArray] = useState<String[]>();
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -89,10 +86,10 @@ export const OzonFields = (): ReactElement => {
             for (let i = 0; i < pageCount.length; i++) {
                 allPages.push(i);
             }
+            
             return allPages;
         };
 
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
@@ -101,18 +98,22 @@ export const OzonFields = (): ReactElement => {
             let getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
         }
-        console.log('pageIds', pageIds);
 
+        console.log('pageIds', pageIds);
         console.log('ozonProductList', ozonProductList);
 
         const getSortedProductList = pageIds.map(id => {
-            const equalProduct = ozonProductList.find((pr: any) => id === pr.id)
-            console.log(equalProduct);
-
+            const equalProduct = ozonProductList.find((product: any) => {
+                //@ts-ignore
+                return product.id === id.id;
+            });
             return { id: equalProduct?.id, label: equalProduct?.label };
         });
+        console.log(getSortedProductList);
 
-        const productGroups = getSortedArray(ozonProductList as any); //getSortedProductList
+        const productGroups = getSortedProductList; //getSortedProductList
+        
+        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
         //@ts-ignore
         productGroups.forEach(async group => {
             finalPdf.addPage();
@@ -120,16 +121,20 @@ export const OzonFields = (): ReactElement => {
             resizePdfPages(pages);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            const text = wrapText(group.text, 400, font, 25);
+            //@ts-ignore
+            const text = wrapText(group.label, 400, font, 25);
             let pagesForGroup: PDFPage[] = [];
 
             drawTextOnPages(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
+                //@ts-ignore
                 if (typeof group.id === 'string' && pageIds[i] === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
+                    //@ts-ignore
                     for (let j = 0; j < group.id.length; j++) {
+                        //@ts-ignore
                         if (group.id[j] === pageIds[i]) {
                             pagesForGroup.push(copiedPages[i]);
                         }
@@ -138,7 +143,7 @@ export const OzonFields = (): ReactElement => {
             }
 
             pagesForGroup.forEach((page, index) => {
-                for (let i = 0; i < multiplier; i++) {
+                for (let i = 1; i < 3; i++) {
                     finalPdf.addPage(page);
                 }
             });

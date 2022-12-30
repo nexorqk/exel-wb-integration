@@ -58,8 +58,6 @@ export const App = (): ReactElement => {
             return 1;
         };
 
-        
-
         const arr = productList.map((el: { id: any; label: string }) => ({
             id: el.id,
             label: el.label,
@@ -81,11 +79,11 @@ export const App = (): ReactElement => {
         const sortedArray = result.map(el => ({
             ...el,
             countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-            text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)
-
-          1 шт - ${el.label}
+            text: `${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов
+            
+            ${el.label}
           `,
-        }));        
+        }));
 
         return sortedArray;
     };
@@ -122,17 +120,20 @@ export const App = (): ReactElement => {
 
             if (id) pageIds.push(id);
         }
+
+        console.log(pageIds);
         
-        setPdfTextArray(pageIds)
+
+        setPdfTextArray(pageIds);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
                 return product.id === id;
             });
 
-            return {id: equalProduct?.id, label: equalProduct?.label};
+            return { id: equalProduct?.id, label: equalProduct?.label };
         });
-        
+
         const productGroups = getSortedArray(getSortedProductList as any);
 
         productGroups.forEach(async group => {
@@ -181,7 +182,7 @@ export const App = (): ReactElement => {
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Стикер'].slice(-4),
+                    id: el['Стикер'].slice(0, 6),
                     label: el['Название товара'],
                 }));
 

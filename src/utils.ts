@@ -29,15 +29,24 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
 export const generateOzonText = (label: any) => {
     if (label.count && label.count > 1) {
         return `Сложный заказ
-
-        Количество: ${label.count} шт.
-        
-        
-        ${label.label}
+        \nКоличество: ${label.count} шт.
+        \n${label.label}
         `;
     }
 
-    return label.label;
+    // @ts-ignore
+    // const copyNum = label.find(el => el.id === label.id);
+
+    // if (copyNum) {
+    //     return `
+    // \nСложный заказ
+    // \n${label.label}
+    // `;
+    // }
+
+    return `
+    \n${label.label}
+    `;
 };
 
 export const resizePdfPages = (pages: PDFPage[]) => {

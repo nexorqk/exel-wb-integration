@@ -26,7 +26,7 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
-export const generateOzonText = (label: any) => {
+export const generateOzonText = (label: any, data: any) => {
     if (label.count && label.count > 1) {
         return `Сложный заказ
         \nКоличество: ${label.count} шт.
@@ -34,8 +34,17 @@ export const generateOzonText = (label: any) => {
         `;
     }
 
-    // @ts-ignore
-    // const copyNum = label.find(el => el.id === label.id);
+    // const arrOfProps = [];
+
+    // for (let dataItem of data) {
+    //     arrOfProps.push(dataItem);
+    // }
+
+    // const toFindDuplicates = arry => {
+    //     arry.filter((item, index) => )
+    // }
+
+    // if (curr.id === label.id) {
 
     // if (copyNum) {
     //     return `

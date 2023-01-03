@@ -100,7 +100,8 @@ export const OzonFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            const ozonText = generateOzonText(group);
+            const ozonText = generateOzonText(group, productGroups);
+            console.log(ozonText);
             //@ts-ignore
             const text = wrapText(ozonText, 200, font, 20).replace(/\//gm, '');
             let pagesForGroup: PDFPage[] = [];

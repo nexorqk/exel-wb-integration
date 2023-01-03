@@ -4,7 +4,14 @@ import { PDFDocument, PDFFont, PDFPage, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { wrapText, drawTextOnPages, setWorkerSrc, resizeOzonPdfPages, drawTextOnPagesOzon } from '../../utils';
+import {
+    wrapText,
+    drawTextOnPages,
+    setWorkerSrc,
+    resizeOzonPdfPages,
+    drawTextOnPagesOzon,
+    generateOzonText,
+} from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
@@ -40,34 +47,6 @@ export const OzonFields = (): ReactElement => {
         pageIds.push(oneArgs);
     };
 
-    const getSortedArray = (productList: ProductList) => {
-        const arr = productList.map((el: { id: any; label: string }) => ({
-            id: el.id,
-            label: el.label,
-            // count: getCountOrder(el.label),
-        }));
-
-        // const result = Object.values(
-        //     arr.reduce((acc: Accomulator, item: AccomulatorItem) => {
-        //         if (!acc[item.label])
-        //             acc[item.label] = {
-        //                 ...item,
-        //             };
-        //         //@ts-ignore
-        //         else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
-        //         return acc;
-        //     }, {}),
-        // );
-
-        // const sortedArray = result.map(el => ({
-        //     ...el,
-        //     countOrder: typeof el.id === 'string' ? 1 : el.id.length,
-        //     text: `по ${el.count} товару в заказе (${typeof el.id === 'string' ? 1 : el.id.length} шт. заказов)`,
-        // }));
-
-        // return sortedArray;
-    };
-
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
         pdfBuffer: ArrayBuffer,
@@ -98,15 +77,15 @@ export const OzonFields = (): ReactElement => {
             setPercentOzon(getPercent * index);
         }
 
-        console.log('pageIds', pageIds);
-        console.log('ozonProductList', ozonProductList);
+        // console.log('pageIds', pageIds);
+        // console.log('ozonProductList', ozonProductList);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = ozonProductList.find((product: any) => {
                 //@ts-ignore
                 return product.id === id.id;
             });
-            return { id: equalProduct?.id, label: equalProduct?.label };
+            return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
         });
         console.log(getSortedProductList);
 
@@ -120,8 +99,10 @@ export const OzonFields = (): ReactElement => {
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
+
+            const ozonText = generateOzonText(group);
             //@ts-ignore
-            const text = wrapText(group.label, 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(ozonText, 200, font, 20).replace(/\//gm, '');
             let pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
@@ -166,11 +147,11 @@ export const OzonFields = (): ReactElement => {
                 const wsname = wb.SheetNames[0];
                 const ws = wb.Sheets[wsname];
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
-                console.log(data);
 
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Номер отправления'],
                     label: el['Наименование товара'],
+                    count: +el['Количество'],
                 }));
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));

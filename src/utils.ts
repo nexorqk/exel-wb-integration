@@ -26,6 +26,20 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
+export const generateOzonText = (label: any) => {
+    if (label.count && label.count > 1) {
+        return `Сложный заказ
+
+        Количество: ${label.count} шт.
+        
+        
+        ${label.label}
+        `;
+    }
+
+    return label.label;
+};
+
 export const resizePdfPages = (pages: PDFPage[]) => {
     const new_size = pageSize;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
@@ -78,7 +92,7 @@ export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
 export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) => {
     page.drawText(text, {
         x: 30,
-        y: 750,
+        y: 900,
         size: 50,
         font: font,
         lineHeight: 60,

@@ -34,17 +34,19 @@ export const generateOzonText = (label: any, data: any) => {
         `;
     }
 
-    // const arrOfProps = [];
+    const arrOfProps = [];
 
-    // for (let dataItem of data) {
-    //     arrOfProps.push(dataItem);
-    // }
+    for (let dataItem of data) {
+        arrOfProps.push(dataItem);
+    }
 
-    // const toFindDuplicates = arry => {
-    //     arry.filter((item, index) => )
-    // }
+    function findDuplicates(arr: any) {
+        return arr.filter((currentValue: any, currentIndex: any) => arr.indexOf(currentValue) !== currentIndex);
+    }
 
-    // if (curr.id === label.id) {
+    const duplicates = findDuplicates(arrOfProps);
+
+    console.log(duplicates);
 
     // if (copyNum) {
     //     return `

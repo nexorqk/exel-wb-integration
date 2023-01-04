@@ -10,24 +10,23 @@ import { OzonFields } from './components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 
-import { ProductGroup, ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
+import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
     const [getPdfData, setGetPdfData] = useState(false);
-    const [pdfPageLength, setPdfPageLength] = useState<Number>(0);
+    // const [pdfPageLength, setPdfPageLength] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-    const [pdfTextArray, setPdfTextArray] = useState<String[]>();
+    // const [pdfTextArray, setPdfTextArray] = useState<string[]>();
 
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
     const status = percent === 100 ? 'success' : 'active';
     const color = percent === 100 ? '#8a2be2' : '#02749C';
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
@@ -102,7 +101,7 @@ export const App = (): ReactElement => {
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const prepareIndices = () => {
-            let allPages = [];
+            const allPages = [];
 
             for (let i = 0; i < pageCount.length; i++) {
                 allPages.push(i);
@@ -112,19 +111,18 @@ export const App = (): ReactElement => {
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
-        let pageIds: string[] = [];
+        const pageIds: string[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            let getPercent = 100 / pageCount.length;
+            const getPercent = 100 / pageCount.length;
             setPercent(getPercent * index);
 
             if (id) pageIds.push(id);
         }
 
-        console.log(pageIds);
-        
+        // console.log(pageIds);
 
-        setPdfTextArray(pageIds);
+        // setPdfTextArray(pageIds);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
@@ -143,7 +141,7 @@ export const App = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const text = wrapText(group.text, 400, font, 25);
-            let pagesForGroup: PDFPage[] = [];
+            const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPages(lastPage, text, timesRomanFont);
 
@@ -159,7 +157,7 @@ export const App = (): ReactElement => {
                 }
             }
 
-            pagesForGroup.forEach((page, index) => {
+            pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {
                     finalPdf.addPage(page);
                 }
@@ -233,7 +231,7 @@ export const App = (): ReactElement => {
             const pdfBlob = new Blob([pdfBytes]);
             setObjectUrl(URL.createObjectURL(pdfBlob));
             const fileURL = window.URL.createObjectURL(pdfBlob);
-            let alink = document.createElement('a');
+            const alink = document.createElement('a');
             alink.href = fileURL;
             alink.download = 'SamplePDF.pdf';
             alink.click();

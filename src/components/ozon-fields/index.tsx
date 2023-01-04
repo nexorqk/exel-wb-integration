@@ -1,22 +1,15 @@
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
-import { PDFDocument, PDFFont, PDFPage, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import {
-    wrapText,
-    drawTextOnPages,
-    setWorkerSrc,
-    resizeOzonPdfPages,
-    drawTextOnPagesOzon,
-    generateOzonText,
-} from '../../utils';
+import { wrapText, setWorkerSrc, resizeOzonPdfPages, drawTextOnPagesOzon, generateOzonText } from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
-import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
+import { ProductList, ExcelRow } from '../../types/common';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -34,7 +27,7 @@ export const OzonFields = (): ReactElement => {
         setWorkerSrc(pdfjs);
     });
 
-    let pageIds: string[] = [];
+    const pageIds: string[] = [];
 
     const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
         const doc = await pdfjs.getDocument(file).promise;
@@ -60,7 +53,7 @@ export const OzonFields = (): ReactElement => {
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const prepareIndices = () => {
-            let allPages = [];
+            const allPages = [];
 
             for (let i = 0; i < pageCount.length; i++) {
                 allPages.push(i);
@@ -73,7 +66,7 @@ export const OzonFields = (): ReactElement => {
             const id = await getOzonPDFText(pdfBuffer, index);
 
             if (id as any) pageIds.push(id as any);
-            let getPercent = 100 / pageCount.length;
+            const getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
         }
 
@@ -104,7 +97,7 @@ export const OzonFields = (): ReactElement => {
             console.log(ozonText);
             //@ts-ignore
             const text = wrapText(ozonText, 200, font, 20).replace(/\//gm, '');
-            let pagesForGroup: PDFPage[] = [];
+            const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
@@ -203,7 +196,7 @@ export const OzonFields = (): ReactElement => {
             const pdfBlob = new Blob([pdfBytes]);
             setObjectUrl(URL.createObjectURL(pdfBlob));
             const fileURL = window.URL.createObjectURL(pdfBlob);
-            let alink = document.createElement('a');
+            const alink = document.createElement('a');
             alink.href = fileURL;
             alink.download = 'SamplePDF.pdf';
             alink.click();

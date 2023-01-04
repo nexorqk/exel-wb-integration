@@ -26,8 +26,46 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
+export const generateOzonText = (label: any, similarIds: any) => {
+    if (label.count && label.count > 1) {
+        return `Сложный заказ
+        \nКоличество: ${label.count} шт.
+        \n${label.label}
+        `;
+    }
+
+    if (similarIds.length > 1 && label.count === 1) {
+        return `\nСложный заказ
+        \n${label.label}
+        `;
+    }
+
+    return `
+    \n${label.label}
+    `;
+};
+
 export const resizePdfPages = (pages: PDFPage[]) => {
     const new_size = pageSize;
+    const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
+
+    pages.forEach(page => {
+        const { width, height } = page.getMediaBox();
+        const size_ratio = Math.round((width / height) * 100);
+
+        if (Math.abs(new_size_ratio - size_ratio) > 1) {
+            page.setSize(new_size.width, new_size.height);
+            const scale_content = Math.min(new_size.width / width, new_size.height / height);
+
+            page.scaleContent(scale_content, scale_content);
+        } else {
+            page.scale(new_size.width / width, new_size.height / height);
+        }
+    });
+};
+
+export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
+    const new_size = pageSizeOzon;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
     pages.forEach(page => {
@@ -50,6 +88,17 @@ export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
         x: 100,
         y: 650,
         size: 60,
+        font: font,
+        lineHeight: 60,
+        color: rgb(0, 0, 0),
+    });
+};
+
+export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) => {
+    page.drawText(text, {
+        x: 30,
+        y: 900,
+        size: 50,
         font: font,
         lineHeight: 60,
         color: rgb(0, 0, 0),

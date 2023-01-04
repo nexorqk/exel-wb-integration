@@ -9,6 +9,7 @@ export interface ProductGroup {
 export interface ProductListItem {
     label: string;
     id: string;
+    count?: number;
 }
 export type ProductList = ProductListItem[];
 

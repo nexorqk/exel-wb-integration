@@ -80,7 +80,7 @@ export const OzonFields = (): ReactElement => {
             });
             return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
         });
-        console.log(getSortedProductList);
+        // console.log(getSortedProductList);
 
         const productGroups = getSortedProductList; //getSortedProductList
 
@@ -92,9 +92,11 @@ export const OzonFields = (): ReactElement => {
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
+            const getSimilarIds = ozonProductList.filter(i => i.id == group.id);
+            // console.log('ozonProductList', ozonProductList);
 
-            const ozonText = generateOzonText(group, productGroups);
-            console.log(ozonText);
+            const ozonText = generateOzonText(group, getSimilarIds);
+            // console.log(ozonText);
             //@ts-ignore
             const text = wrapText(ozonText, 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
@@ -120,7 +122,7 @@ export const OzonFields = (): ReactElement => {
                 }
             }
 
-            pagesForGroup.forEach((page, index) => {
+            pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {
                     finalPdf.addPage(page);
                 }

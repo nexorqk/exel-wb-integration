@@ -8,7 +8,7 @@ export const pageSizeOzon = {
     height: 144,
 };
 
-export const FONT_URL: string = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf';
+export const FONT_URL = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf';
 
 export enum Multiplier {
     WILDBERRIES = 2,

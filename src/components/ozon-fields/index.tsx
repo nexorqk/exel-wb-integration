@@ -93,6 +93,7 @@ export const OzonFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
             const getSimilarIds = ozonProductList.filter(i => i.id == group.id);
+            // console.log(getSimilarIds);
             // console.log('ozonProductList', ozonProductList);
 
             const ozonText = generateOzonText(group, getSimilarIds);

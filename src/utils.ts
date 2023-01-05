@@ -38,7 +38,7 @@ export const generateOzonText = (label: any, similarIds: any) => {
         // \n${el.label} - ${el.count} шт.
 
         // @ts-ignore
-        const text = Object.values(similarIds).map(el => `\n${el.label} - ${el.count} шт.`);
+        const text = Object.values(similarIds).map(el => `\n\n${el.label} - ${el.count} шт.`);
 
         return `\nСложный заказ
                 ${text}

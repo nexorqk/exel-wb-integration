@@ -119,20 +119,27 @@ export const OzonFields = (): ReactElement => {
             // const ozonText = generateOzonText(group, getSimilarIds);
             // console.log(ozonText);
             //@ts-ignore
+            console.log(group.label);
+
+            //@ts-ignore
             const text = wrapText(group.label, 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
+                console.log('pageIds[i]', pageIds[i]);
                 // @ts-ignore
-                if (typeof group.id === 'string' && pageIds[i] === group.id) {
+                console.log(' group.id', group.id);
+
+                // @ts-ignore
+                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     // @ts-ignore
-                    for (let j = 0; j < group.id.length; j++) {
+                    for (let j = 0; j <pageIds[i].id.length; j++) {
                         // @ts-ignore
-                        if (group.id[j] === pageIds[i]) {
+                        if (group.id[j] === pageIds[i].id) {
                             pagesForGroup.push(copiedPages[i]);
                         }
                     }

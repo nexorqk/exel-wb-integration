@@ -9,27 +9,66 @@ import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
-
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
     const [getPdfData, setGetPdfData] = useState(false);
-    // const [pdfPageLength, setPdfPageLength] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-    // const [pdfTextArray, setPdfTextArray] = useState<string[]>();
-
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
+    const [mergedPDF, setMergedPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
+    const [finalPDFList, setFinalPDFList] = useState<PDFDocument[]>([]);
+    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const status = percent === 100 ? 'success' : 'active';
     const color = percent === 100 ? '#8a2be2' : '#02749C';
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
+
+    useEffect(() => {
+        if (finalPDF) {
+            //@ts-ignore
+            setFinalPDFList(currentValue => {
+                return [...currentValue, finalPDF];
+            });
+        }
+    }, [finalPDF]);
+
+    useEffect(() => {
+        if (uploadedFiles.length === finalPDFList.length && uploadedFiles.length > 0) {
+            const mergePDF = async () => {
+                const mergedPDF = await PDFDocument.create();
+
+                for (let i = 0; i < finalPDFList.length; i++) {
+                    const copiedPages = await mergedPDF.copyPages(finalPDFList[i], finalPDFList[i].getPageIndices());
+                    copiedPages.forEach(page => mergedPDF.addPage(page));
+                }
+                return mergedPDF;
+            };
+            const setMergedPDFDocument = async () => {
+                const mergedPDFDocument = await mergePDF();
+                setMergedPDF(mergedPDFDocument);
+                console.log(mergedPDFDocument);
+            };
+            setMergedPDFDocument();
+        }
+    }, [finalPDFList]);
+
+    useEffect(() => {
+        const saveBytes = async () => {
+            if (mergedPDF) {
+                const pdfBytes = await mergedPDF.save();
+                setPdfBytes(pdfBytes);
+            }
+        };
+        saveBytes();
+        console.log(mergedPDF);
+    }, [mergedPDF]);
 
     const getSortedArray = (productList: ProductList) => {
         const getCountOrder = (text: string) => {
@@ -89,7 +128,6 @@ export const App = (): ReactElement => {
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
-        // productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
         multiplier: number,
@@ -119,10 +157,6 @@ export const App = (): ReactElement => {
 
             if (id) pageIds.push(id);
         }
-
-        // console.log(pageIds);
-
-        // setPdfTextArray(pageIds);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
@@ -163,7 +197,7 @@ export const App = (): ReactElement => {
                 }
             });
         });
-
+        setFinalPDF(finalPdf);
         return finalPdf;
     };
 
@@ -192,39 +226,46 @@ export const App = (): ReactElement => {
         };
     };
 
-    const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handlePDFSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
         setLoading(true);
-        const reader = new FileReader();
+
+        //@ts-ignore
+        const files = Object.values(e.target.files);
 
         if (e.target.files) {
-            reader.readAsArrayBuffer(e.target.files[0]);
-        }
+            setUploadedFiles(files);
+            for (let i = 0; i < e.target.files.length; i++) {
+                const onLoad = async () => {
+                    const reader = new FileReader();
+                    reader.readAsArrayBuffer(files[i]);
+                    reader.onloadend = async () => {
+                        const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
+                        pdfDoc.registerFontkit(fontkit);
+                        const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
+                        const timesRomanFont = await pdfDoc.embedFont(fontBytes);
+                        await generateFinalPDF(
+                            pdfDoc,
+                            reader.result as ArrayBuffer,
+                            timesRomanFont,
+                            Multiplier.WILDBERRIES,
+                        );
+                    };
+                };
+                await onLoad();
+            }
 
-        reader.onload = async () => {
-            const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
-            pdfDoc.registerFontkit(fontkit);
-            const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
-            const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-
-            // const productGroups = getSortedArray(productList);
-            const finalPDF = await generateFinalPDF(
-                pdfDoc,
-                reader.result as ArrayBuffer,
-                timesRomanFont,
-                Multiplier.WILDBERRIES,
-            );
-            const pdfBytes = await finalPDF.save();
-            setFinalPDF(finalPDF);
-            setPdfBytes(pdfBytes);
             setLoading(false);
-        };
 
-        setGetPdfData(true);
-        setDisable(true);
+            setGetPdfData(true);
+            setDisable(true);
+        }
     };
 
     const onClick = () => {
-        if (finalPDF && pdfBytes) {
+        console.log('onclick');
+
+        if (mergedPDF && pdfBytes) {
+            console.log('onclick works');
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);
             }
@@ -276,6 +317,7 @@ export const App = (): ReactElement => {
                             <label htmlFor="PDF" className="btn" aria-disabled>
                                 Выбрать PDF файл
                                 <input
+                                    multiple
                                     type="file"
                                     onChange={handlePDFSelected}
                                     placeholder="Choose 11"
@@ -289,7 +331,7 @@ export const App = (): ReactElement => {
                         </Whisper>
                     </div>
 
-                    <button className="button" disabled={!finalPDF} type="button" onClick={() => onClick()}>
+                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
                         Скачать
                     </button>
                 </div>

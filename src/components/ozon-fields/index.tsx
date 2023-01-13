@@ -40,6 +40,22 @@ export const OzonFields = (): ReactElement => {
         pageIds.push(oneArgs);
     };
 
+    const getSortedArray = (productList: ProductList) => {
+        const result = Object.values(
+            productList.reduce((acc: any, item: any) => {
+                if (!acc[item.label])
+                    acc[item.label] = {
+                        ...item,
+                    };
+                //@ts-ignore
+                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
+                return acc;
+            }, {}),
+        );
+
+        return result;
+    };
+
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
         pdfBuffer: ArrayBuffer,
@@ -80,42 +96,42 @@ export const OzonFields = (): ReactElement => {
             });
             return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
         });
-        // console.log(getSortedProductList);
+        console.log(getSortedProductList);
 
-        const productGroups = getSortedProductList; //getSortedProductList
+        // @ts-ignore
+        const sortedArr = getSortedArray(getSortedProductList);
+        console.log('sortedArr: ', sortedArr);
+
+        const productGroups = sortedArr; //getSortedProductList
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
-        //@ts-ignore
+
         productGroups.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            const getSimilarIds = ozonProductList.filter(i => i.id == group.id);
+            // const getSimilarIds = ozonProductList.filter(i => i.id == group.id);
             // console.log(getSimilarIds);
             // console.log('ozonProductList', ozonProductList);
 
-            const ozonText = generateOzonText(group, getSimilarIds);
+            // const ozonText = generateOzonText(group, getSimilarIds);
             // console.log(ozonText);
             //@ts-ignore
-            const text = wrapText(ozonText, 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(group.label, 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
-                //@ts-ignore
-                // console.log(`pageIds [${i}]`, pageIds[i].id);
-                //@ts-ignore
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                    // not working
-                    // console.log('groupId:', group.id, `pageIds [${i}]`, pageIds[i]);
+                // @ts-ignore
+                if (typeof group.id === 'string' && pageIds[i] === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
-                    //@ts-ignore
+                    // @ts-ignore
                     for (let j = 0; j < group.id.length; j++) {
-                        //@ts-ignore
+                        // @ts-ignore
                         if (group.id[j] === pageIds[i]) {
                             pagesForGroup.push(copiedPages[i]);
                         }
@@ -128,6 +144,31 @@ export const OzonFields = (): ReactElement => {
                     finalPdf.addPage(page);
                 }
             });
+
+            // for (let i = 0; i < pageCount.length; i++) {
+            //     //@ts-ignore
+            //     // console.log(`pageIds [${i}]`, pageIds[i].id);
+            //     //@ts-ignore
+            //     if (typeof group.id === 'string' && pageIds[i].id === group.id) {
+            //         // not working
+            //         // console.log('groupId:', group.id, `pageIds [${i}]`, pageIds[i]);
+            //         pagesForGroup.push(copiedPages[i]);
+            //     } else {
+            //         //@ts-ignore
+            //         for (let j = 0; j < group.id.length; j++) {
+            //             //@ts-ignore
+            //             if (group.id[j] === pageIds[i]) {
+            //                 pagesForGroup.push(copiedPages[i]);
+            //             }
+            //         }
+            //     }
+            // }
+
+            // pagesForGroup.forEach(page => {
+            //     for (let i = 0; i < multiplier; i++) {
+            //         finalPdf.addPage(page);
+            //     }
+            // });
         });
 
         return finalPdf;

@@ -26,29 +26,19 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
-export const generateOzonText = (label: any, similarIds: any) => {
-    if (label.count && label.count > 1) {
-        return `Сложный заказ
-        \nКоличество: ${label.count} шт.
-        \n${label.label}
-        `;
-    }
-
-    if (similarIds.length > 1 && label.count === 1) {
-        // \n${el.label} - ${el.count} шт.
-
-        // @ts-ignore
-        const text = Object.values(similarIds).map(el => `\n\n${el.label} - ${el.count} шт.`);
-
-        return `\nСложный заказ
-                ${text}
-        `;
-    }
-
-    return `
-    \n${label.label}
-    `;
-};
+export const generateOzonText = (label: string, count: number) =>
+    //  {
+    //     if (count > 1) {
+    //         `Сложный заказ\n
+    //         ${label}
+    //         \nКоличество: ${count}`;
+    //     } else {
+    //         `${label}
+    //         \nКоличество: ${count}`;
+    //     }
+    // };
+    `${label}
+    \nКоличество: ${count}`;
 
 export const resizePdfPages = (pages: PDFPage[]) => {
     const new_size = pageSize;

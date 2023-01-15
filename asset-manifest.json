@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/exel-wb-integration/static/css/main.4d2f5b8d.css",
-    "main.js": "/exel-wb-integration/static/js/main.666084ca.js",
+    "main.js": "/exel-wb-integration/static/js/main.f2cb5a02.js",
     "index.html": "/exel-wb-integration/index.html",
     "main.4d2f5b8d.css.map": "/exel-wb-integration/static/css/main.4d2f5b8d.css.map",
-    "main.666084ca.js.map": "/exel-wb-integration/static/js/main.666084ca.js.map"
+    "main.f2cb5a02.js.map": "/exel-wb-integration/static/js/main.f2cb5a02.js.map"
   },
   "entrypoints": [
     "static/css/main.4d2f5b8d.css",
-    "static/js/main.666084ca.js"
+    "static/js/main.f2cb5a02.js"
   ]
 }

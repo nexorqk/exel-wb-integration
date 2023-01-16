@@ -285,7 +285,7 @@ export const App = (): ReactElement => {
             <aside className="rules-article">
                 <ul style={{ listStyle: 'decimal' }}>
                     <li>Загрузите Excel-файл</li>
-                    <li>Загрузите PDF-файл</li>
+                    <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
                     <li>Дождитесь загрузки</li>
                     <li>Нажмите на кнопку Скачать</li>
                 </ul>

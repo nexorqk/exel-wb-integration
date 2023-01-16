@@ -28,20 +28,14 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
 
 export const generateOzonText = (label: string, count: number, id: string) => {
     if (typeof id === 'string' && id.split(' ').length === 1) {
-        return `Сложный заказ\n${label}\nКоличество: ${count}`;
+        return `Сложный заказ
+        \nКоличество: ${count} шт.
+        \n${label}
+        `;
     }
-    return `${label}\nЗаказов: ${count}`;
+    return `\n${label}
+    \nЗаказов: ${count}шт.`;
 };
-//  {
-//     if (count > 1) {
-//         `Сложный заказ\n
-//         ${label}
-//         \nКоличество: ${count}`;
-//     } else {
-//         `${label}
-//         \nКоличество: ${count}`;
-//     }
-// };
 
 export const resizePdfPages = (pages: PDFPage[]) => {
     const new_size = pageSize;

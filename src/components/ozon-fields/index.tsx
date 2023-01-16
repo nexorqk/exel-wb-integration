@@ -55,7 +55,8 @@ export const OzonFields = (): ReactElement => {
             // @ts-ignore
             id: el.id,
             // @ts-ignore
-            count: typeof el.id === 'string' ? el.id.split(' ').length : el.id.length,
+            // count: typeof el.id === 'string' ? el.id.split(' ').length : el.id.length,
+            count: typeof el.id === 'string' ? el.count : el.id.length,
             // @ts-ignore
             label: el.label,
         }));
@@ -103,8 +104,6 @@ export const OzonFields = (): ReactElement => {
             });
             return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
         });
-        console.log(getSortedProductList);
-
         // @ts-ignore
         const sortedArr = getSortedArray(getSortedProductList);
         console.log('sortedArr: ', sortedArr);
@@ -119,10 +118,10 @@ export const OzonFields = (): ReactElement => {
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            const { label, count } = group;
+            const { label, count, id } = group;
 
             //@ts-ignore
-            const text = wrapText(generateOzonText(label, count), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateOzonText(label, count, id), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
@@ -169,6 +168,9 @@ export const OzonFields = (): ReactElement => {
                     label: el['Наименование товара'],
                     count: +el['Количество'],
                 }));
+
+                console.log(getArgs, 'getArgs');
+                
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 

@@ -1,6 +1,8 @@
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
+import { BufferEnum, ExcelRow, ProductList } from './types/common';
+import * as XLSX from 'xlsx';
 
 export const setWorkerSrc = (data: any) => {
     return (data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`);
@@ -120,3 +122,46 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
 
     return `${item?.str}${itemLast?.str}`;
 };
+
+export const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
+    const doc = await pdfjs.getDocument(file).promise;
+    const page = await doc.getPage(number);
+
+    const item = await page.getTextContent();
+    //@ts-ignore
+    const oneArgs = { id: item.items[4].str };
+    //@ts-ignore'
+    pageIds.push(oneArgs);
+};
+
+export const createPdfFile = (pdfBlob: any) => {
+    const fileURL = window.URL.createObjectURL(pdfBlob);
+    const alink = document.createElement('a');
+    alink.href = fileURL;
+    alink.download = 'SamplePDF.pdf';
+    alink.click();
+};
+
+export const fileRead = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileReader = new FileReader();
+        if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
+
+        fileReader.onload = e => {
+            if (e.target) {
+                const bufferArray = e?.target.result;
+                const wb = XLSX.read(bufferArray, { type: BufferEnum.BUFFER });
+                const wsname = wb.SheetNames[0];
+                const ws = wb.Sheets[wsname];
+                const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
+
+                const getArgs = data.map((el: ExcelRow) => ({
+                    id: el['Номер отправления'],
+                    label: el['Наименование товара'],
+                    count: +el['Количество'],
+                }));
+
+                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                return getSortedArr
+            }
+        };
+}

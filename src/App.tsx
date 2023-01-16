@@ -6,7 +6,7 @@ import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
 import { FONT_URL, Multiplier } from './constants';
-import { OzonFields } from './components/ozon-fields';
+import { OzonFields } from './components/Ozon';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 
@@ -15,12 +15,10 @@ import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/com
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
     const [getPdfData, setGetPdfData] = useState(false);
-    // const [pdfPageLength, setPdfPageLength] = useState<number>(0);
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-    // const [pdfTextArray, setPdfTextArray] = useState<string[]>();
 
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
@@ -89,7 +87,6 @@ export const App = (): ReactElement => {
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
-        // productGroups: ProductGroup[],
         pdfBuffer: ArrayBuffer,
         font: PDFFont,
         multiplier: number,
@@ -119,10 +116,6 @@ export const App = (): ReactElement => {
 
             if (id) pageIds.push(id);
         }
-
-        // console.log(pageIds);
-
-        // setPdfTextArray(pageIds);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
@@ -206,7 +199,6 @@ export const App = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            // const productGroups = getSortedArray(productList);
             const finalPDF = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,

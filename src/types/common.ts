@@ -35,3 +35,7 @@ export interface TextContentItem {
     transform: number[];
     width: number;
 }
+
+export enum BufferEnum {
+    BUFFER = 'buffer'
+}

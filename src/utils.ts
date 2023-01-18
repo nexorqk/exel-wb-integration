@@ -1,3 +1,4 @@
+import { ProductList } from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
@@ -127,3 +128,11 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
 
     return `${item?.str}${itemLast?.str}`;
 };
+
+export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =>
+    arr.filter((item, index) => {
+        arr.splice(index, 1);
+        const unique = duplicates ? arr.find(elem => elem.id === item.id) : !arr.find(elem => elem.id === item.id);
+        arr.splice(index, 0, item);
+        return unique;
+    });

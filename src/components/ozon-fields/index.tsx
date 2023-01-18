@@ -4,7 +4,14 @@ import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { wrapText, setWorkerSrc, resizeOzonPdfPages, drawTextOnPagesOzon, generateOzonText } from '../../utils';
+import {
+    wrapText,
+    setWorkerSrc,
+    resizeOzonPdfPages,
+    drawTextOnPagesOzon,
+    generateOzonText,
+    getDuplicatesOrUniques,
+} from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
@@ -19,13 +26,16 @@ export const OzonFields = (): ReactElement => {
     const [percentOzon, setPercentOzon] = useState(0);
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [objectUrlOzon, setObjectUrl] = useState('');
+    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
-    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
+    useEffect(() => {
+        console.log(ozonProductList);
+    }, [ozonProductList]);
 
     const pageIds: string[] = [];
 
@@ -41,6 +51,15 @@ export const OzonFields = (): ReactElement => {
     };
 
     const getSortedArray = (productList: ProductList) => {
+        const uniqueOrders = getDuplicatesOrUniques(productList);
+        const duplicatedOrders = getDuplicatesOrUniques(productList, true);
+        const simpleOrders = uniqueOrders.filter(item => item.count === 1);
+        const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
+        console.log('unique', uniqueOrders);
+        console.log('dupl', duplicatedOrders);
+        console.log('simple', simpleOrders);
+        console.log('diff', difficultOrders);
+
         const result = Object.values(
             productList.reduce((acc: any, item: any) => {
                 if (!acc[item.label])
@@ -61,8 +80,10 @@ export const OzonFields = (): ReactElement => {
         //     // @ts-ignore
         //     label: el.label,
         // }));
+        console.log(result);
 
         return result;
+        // const equalOffers = productList;
     };
 
     const generateFinalPDF = async (
@@ -117,7 +138,7 @@ export const OzonFields = (): ReactElement => {
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            console.log(group);
+            // console.log(group);
             // const getSimilarIds = group.filter(i => i.id == group.id);
             // @ts-ignore
             const { label, count, id } = group;
@@ -168,10 +189,8 @@ export const OzonFields = (): ReactElement => {
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Номер отправления'],
                     label: el['Наименование товара'],
-                    count: +el['Количество'],
+                    count: Number(el['Количество']),
                 }));
-
-                console.log(getArgs, 'getArgs');
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 

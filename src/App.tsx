@@ -53,7 +53,6 @@ export const App = (): ReactElement => {
             const setMergedPDFDocument = async () => {
                 const mergedPDFDocument = await mergePDF();
                 setMergedPDF(mergedPDFDocument);
-                console.log(mergedPDFDocument);
             };
             setMergedPDFDocument();
         }
@@ -67,7 +66,6 @@ export const App = (): ReactElement => {
             }
         };
         saveBytes();
-        console.log(mergedPDF);
     }, [mergedPDF]);
 
     const getSortedArray = (productList: ProductList) => {
@@ -331,7 +329,12 @@ export const App = (): ReactElement => {
                         </Whisper>
                     </div>
 
-                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                    <button
+                        className="button"
+                        disabled={!mergedPDF && !pdfBytes}
+                        type="button"
+                        onClick={() => onClick()}
+                    >
                         Скачать
                     </button>
                 </div>

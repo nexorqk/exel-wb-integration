@@ -33,9 +33,6 @@ export const OzonFields = (): ReactElement => {
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
-    useEffect(() => {
-        console.log(ozonProductList);
-    }, [ozonProductList]);
 
     const pageIds: string[] = [];
 
@@ -51,15 +48,6 @@ export const OzonFields = (): ReactElement => {
     };
 
     const getSortedArray = (productList: ProductList) => {
-        const uniqueOrders = getDuplicatesOrUniques(productList);
-        const duplicatedOrders = getDuplicatesOrUniques(productList, true);
-        const simpleOrders = uniqueOrders.filter(item => item.count === 1);
-        const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
-        console.log('unique', uniqueOrders);
-        console.log('dupl', duplicatedOrders);
-        console.log('simple', simpleOrders);
-        console.log('diff', difficultOrders);
-
         const result = Object.values(
             productList.reduce((acc: any, item: any) => {
                 if (!acc[item.label])
@@ -71,19 +59,24 @@ export const OzonFields = (): ReactElement => {
                 return acc;
             }, {}),
         );
-        // .map(el => ({
-        //     // @ts-ignore
-        //     id: el.id,
-        //     // @ts-ignore
-        //     // count: typeof el.id === 'string' ? el.id.split(' ').length : el.id.length,
-        //     count: typeof el.id === 'string' ? el.count : el.id.length,
-        //     // @ts-ignore
-        //     label: el.label,
-        // }));
-        console.log(result);
 
         return result;
-        // const equalOffers = productList;
+    };
+
+    const sortDuplicatedOrders = (productList: ProductList) => {
+        const result = Object.values(
+            productList.reduce((acc: any, item: any) => {
+                if (!acc[item.id])
+                    acc[item.id] = {
+                        ...item,
+                    };
+                //@ts-ignore
+                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
+                return acc;
+            }, {}),
+        );
+
+        return result;
     };
 
     const generateFinalPDF = async (
@@ -116,19 +109,15 @@ export const OzonFields = (): ReactElement => {
             setPercentOzon(getPercent * index);
         }
 
-        // console.log('pageIds', pageIds);
-        // console.log('ozonProductList', ozonProductList);
+        const uniqueOrders = getDuplicatesOrUniques(ozonProductList);
+        const duplicatedOrders = getDuplicatesOrUniques(ozonProductList, true);
+        const simpleOrders = uniqueOrders.filter(item => item.count === 1);
+        const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
 
-        // const getSortedProductList = pageIds.map(id => {
-        //     const equalProduct = ozonProductList.find((product: any) => {
-        //         //@ts-ignore
-        //         return product.id === id.id;
-        //     });
-        //     return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
-        // });
-        // @ts-ignore
-        const sortedArr = getSortedArray(ozonProductList);
-        console.log('sortedArr: ', sortedArr);
+        const sortedSimpleOrders = getSortedArray(simpleOrders);
+        const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
+
+        const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
@@ -138,8 +127,7 @@ export const OzonFields = (): ReactElement => {
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            // console.log(group);
-            // const getSimilarIds = group.filter(i => i.id == group.id);
+
             // @ts-ignore
             const { label, count, id } = group;
 
@@ -214,7 +202,6 @@ export const OzonFields = (): ReactElement => {
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
 
-            // const productGroups = getSortedArray();
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,

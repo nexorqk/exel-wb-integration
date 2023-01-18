@@ -51,15 +51,16 @@ export const OzonFields = (): ReactElement => {
                 else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
                 return acc;
             }, {}),
-        ).map(el => ({
-            // @ts-ignore
-            id: el.id,
-            // @ts-ignore
-            // count: typeof el.id === 'string' ? el.id.split(' ').length : el.id.length,
-            count: typeof el.id === 'string' ? el.count : el.id.length,
-            // @ts-ignore
-            label: el.label,
-        }));
+        );
+        // .map(el => ({
+        //     // @ts-ignore
+        //     id: el.id,
+        //     // @ts-ignore
+        //     // count: typeof el.id === 'string' ? el.id.split(' ').length : el.id.length,
+        //     count: typeof el.id === 'string' ? el.count : el.id.length,
+        //     // @ts-ignore
+        //     label: el.label,
+        // }));
 
         return result;
     };
@@ -97,27 +98,28 @@ export const OzonFields = (): ReactElement => {
         // console.log('pageIds', pageIds);
         // console.log('ozonProductList', ozonProductList);
 
-        const getSortedProductList = pageIds.map(id => {
-            const equalProduct = ozonProductList.find((product: any) => {
-                //@ts-ignore
-                return product.id === id.id;
-            });
-            return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
-        });
+        // const getSortedProductList = pageIds.map(id => {
+        //     const equalProduct = ozonProductList.find((product: any) => {
+        //         //@ts-ignore
+        //         return product.id === id.id;
+        //     });
+        //     return { id: equalProduct?.id, label: equalProduct?.label, count: equalProduct?.count };
+        // });
         // @ts-ignore
-        const sortedArr = getSortedArray(getSortedProductList);
+        const sortedArr = getSortedArray(ozonProductList);
         console.log('sortedArr: ', sortedArr);
-
-        const productGroups = sortedArr; //getSortedProductList
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
-        productGroups.forEach(async group => {
+        sortedArr.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
             resizeOzonPdfPages(pages, pageSizeOzon);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
+            console.log(group);
+            // const getSimilarIds = group.filter(i => i.id == group.id);
+            // @ts-ignore
             const { label, count, id } = group;
 
             //@ts-ignore
@@ -170,7 +172,6 @@ export const OzonFields = (): ReactElement => {
                 }));
 
                 console.log(getArgs, 'getArgs');
-                
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 

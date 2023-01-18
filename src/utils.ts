@@ -35,6 +35,26 @@ export const generateOzonText = (label: string, count: number, id: string) => {
     }
     return `\n${label}
     \nЗаказов: ${count}шт.`;
+
+    /*
+       if (label.count && label.count > 1) {
+        return `Сложный заказ
+        \nКоличество: ${label.count} шт.
+        \n${label.label}
+        `;
+    }
+
+    if (similarIds.length > 1 && label.count === 1) {
+        // \n${el.label} - ${el.count} шт.
+
+        // @ts-ignore
+        const text = Object.values(similarIds).map(el => `\n\n${el.label} - ${el.count} шт.`);
+
+        return `\nСложный заказ
+                ${text}
+        `;
+    
+    */
 };
 
 export const resizePdfPages = (pages: PDFPage[]) => {

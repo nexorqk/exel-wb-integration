@@ -4,7 +4,7 @@ import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText } from './utils';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText, generateWBText } from './utils';
 import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
 import './App.css';
@@ -87,6 +87,8 @@ export const App = (): ReactElement => {
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
+            // @ts-ignore
+            article: el.article,
         }));
 
         const result = Object.values(
@@ -150,7 +152,7 @@ export const App = (): ReactElement => {
                 return product.id === id;
             });
 
-            return { id: equalProduct?.id, label: equalProduct?.label };
+            return { id: equalProduct?.id, label: equalProduct?.label, article: equalProduct?.article };
         });
 
         const productGroups = getSortedArray(getSortedProductList as any);
@@ -161,7 +163,9 @@ export const App = (): ReactElement => {
             resizePdfPages(pages);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
-            const text = wrapText(group.text, 400, font, 25);
+
+            // @ts-ignore
+            const text = wrapText(generateWBText(group), 400, font, 25);
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPages(lastPage, text, timesRomanFont);
@@ -203,6 +207,7 @@ export const App = (): ReactElement => {
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Стикер'],
                     label: el['Название товара'],
+                    article: el['Артикул поставщика'],
                 }));
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));

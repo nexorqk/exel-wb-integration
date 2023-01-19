@@ -10,6 +10,7 @@ export interface ProductListItem {
     label: string;
     id: string;
     count?: number;
+    article?: string;
 }
 export type ProductList = ProductListItem[];
 
@@ -17,6 +18,7 @@ export interface AccomulatorItem {
     label: string;
     id: string | string[];
     count: number;
+    article?: string;
 }
 
 export interface Accomulator {

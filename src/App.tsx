@@ -17,7 +17,6 @@ export const App = (): ReactElement => {
     const [loading, setLoading] = useState(false);
     const [disable, setDisable] = useState(true);
     const [percent, setPercent] = useState(0);
-    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [finalPDF, setFinalPDF] = useState<PDFDocument>();
     const [mergedPDF, setMergedPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
@@ -57,16 +56,6 @@ export const App = (): ReactElement => {
             setMergedPDFDocument();
         }
     }, [finalPDFList]);
-
-    useEffect(() => {
-        const saveBytes = async () => {
-            if (mergedPDF) {
-                const pdfBytes = await mergedPDF.save();
-                setPdfBytes(pdfBytes);
-            }
-        };
-        saveBytes();
-    }, [mergedPDF]);
 
     const getSortedArray = (productList: ProductList) => {
         const getCountOrder = (text: string) => {
@@ -259,22 +248,19 @@ export const App = (): ReactElement => {
         }
     };
 
-    const onClick = () => {
-        console.log('onclick');
-
-        if (mergedPDF && pdfBytes) {
-            console.log('onclick works');
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
-            const pdfBlob = new Blob([pdfBytes]);
-            setObjectUrl(URL.createObjectURL(pdfBlob));
-            const fileURL = window.URL.createObjectURL(pdfBlob);
-            const alink = document.createElement('a');
-            alink.href = fileURL;
-            alink.download = 'SamplePDF.pdf';
-            alink.click();
+    const onClick = async () => {
+        if (!mergedPDF) return;
+        const pdfBytes1 = await mergedPDF.save();
+        if (objectUrl) {
+            URL.revokeObjectURL(objectUrl);
         }
+        const pdfBlob = new Blob([pdfBytes1]);
+        setObjectUrl(URL.createObjectURL(pdfBlob));
+        const fileURL = window.URL.createObjectURL(pdfBlob);
+        const alink = document.createElement('a');
+        alink.href = fileURL;
+        alink.download = 'SamplePDF.pdf';
+        alink.click();
     };
 
     return (
@@ -329,12 +315,7 @@ export const App = (): ReactElement => {
                         </Whisper>
                     </div>
 
-                    <button
-                        className="button"
-                        disabled={!mergedPDF && !pdfBytes}
-                        type="button"
-                        onClick={() => onClick()}
-                    >
+                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
                         Скачать
                     </button>
                 </div>
@@ -350,7 +331,7 @@ export const App = (): ReactElement => {
                     <div className="progress">
                         <div className="progress-bar">
                             <label className="progress-label" htmlFor="progress">
-                                {!pdfBytes ? 'В процессе...' : 'Готово к скачиванию!'}
+                                {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
                             </label>
                             <Progress.Line
                                 percent={+percent.toFixed(2)}

@@ -27,6 +27,14 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
+//@ts-ignore
+export const generateWBText = group => {
+    return `
+    ${group.text}
+    ${group.article.split('_')[0]}
+    `;
+};
+
 export const generateOzonText = (label: string | string[], count: number, id: string) => {
     if (typeof id === 'string' && typeof label === 'object') {
         return `По ${count} шт.\n ${label.join('\n')}`;

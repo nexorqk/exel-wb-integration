@@ -37,7 +37,7 @@ export const generateWBText = group => {
 
 export const generateOzonText = (label: string | string[], count: number, id: string) => {
     if (typeof id === 'string' && typeof label === 'object') {
-        return `По ${count} шт.\n ${label.join('\n')}`;
+        return `По ${count} шт.\n ${label.join('\n\n')}`;
     }
 
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
@@ -47,7 +47,7 @@ export const generateOzonText = (label: string | string[], count: number, id: st
         `;
     }
     return `\n${label}
-    \nЗаказов: ${count}шт.`;
+    \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.`;
 };
 
 export const resizePdfPages = (pages: PDFPage[]) => {

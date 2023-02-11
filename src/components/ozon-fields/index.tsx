@@ -131,8 +131,6 @@ export const OzonFields = (): ReactElement => {
             // @ts-ignore
             const { label, count, id, article } = group;
 
-            console.log(group);
-
             //@ts-ignore
             const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];

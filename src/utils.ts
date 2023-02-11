@@ -29,10 +29,15 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
 
 //@ts-ignore
 export const generateWBText = group => {
+    const { text, article } = group;
+
+    const [ARTICLE_1, ARTICLE_2] = [article.substring(0, 25), article.substring(25)];
+
+    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2}`;
+
     return `
-    ${group.text}
-    ${group.article.split('_')[0]}
-    `;
+    ${text}
+    ${articleIndentions}`;
 };
 
 export const generateOzonText = (label: string | string[], count: number, id: string, article: string) => {
@@ -104,7 +109,7 @@ export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
         y: 650,
         size: 60,
         font: font,
-        lineHeight: 60,
+        lineHeight: 50,
         color: rgb(0, 0, 0),
     });
 };

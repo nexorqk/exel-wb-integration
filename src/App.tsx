@@ -205,7 +205,6 @@ export const App = (): ReactElement => {
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
                 const articleName = Object.keys(data[0]);
-                console.log('articleName:', articleName);
 
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Стикер'],

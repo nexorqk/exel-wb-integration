@@ -35,19 +35,29 @@ export const generateWBText = group => {
     `;
 };
 
-export const generateOzonText = (label: string | string[], count: number, id: string) => {
+export const generateOzonText = (label: string | string[], count: number, id: string, article: string) => {
+    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
+        article.substring(0, 10),
+        article.substring(12, 24),
+        article.substring(20),
+    ];
+
+    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
+
     if (typeof id === 'string' && typeof label === 'object') {
-        return `По ${count} шт.\n ${label.join('\n\n')}`;
+        return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
     }
 
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
         return `Сложный заказ
         \nКоличество: ${count} шт.
         \n${label}
+        ${articleIndentions}
         `;
     }
     return `\n${label}
-    \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.`;
+    \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.
+    ${articleIndentions}`;
 };
 
 export const resizePdfPages = (pages: PDFPage[]) => {
@@ -105,7 +115,7 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
         y: 900,
         size: 50,
         font: font,
-        lineHeight: 60,
+        lineHeight: 40,
         color: rgb(0, 0, 0),
     });
 };

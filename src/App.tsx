@@ -204,7 +204,7 @@ export const App = (): ReactElement => {
                 const ws = wb.Sheets[wsname];
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
-                const articleName = Object.keys(data[11]);
+                const articleName = Object.keys(data[0]);
                 console.log('articleName:', articleName);
 
                 const getArgs = data.map((el: ExcelRow) => ({
@@ -213,8 +213,6 @@ export const App = (): ReactElement => {
                     // @ts-ignore
                     article: el['Артикул поставщика'] ?? el[articleName[11]],
                 }));
-
-                console.log('args', getArgs);
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 

@@ -129,10 +129,12 @@ export const OzonFields = (): ReactElement => {
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
             // @ts-ignore
-            const { label, count, id } = group;
+            const { label, count, id, article } = group;
+
+            console.log(group);
 
             //@ts-ignore
-            const text = wrapText(generateOzonText(label, count, id), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
@@ -174,10 +176,13 @@ export const OzonFields = (): ReactElement => {
                 const ws = wb.Sheets[wsname];
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
+                const articleName = Object.keys(data[0]);
+
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Номер отправления'],
                     label: el['Наименование товара'],
                     count: Number(el['Количество']),
+                    article: el['Артикул'] ?? el[articleName[9]],
                 }));
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));

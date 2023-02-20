@@ -1,4 +1,4 @@
-import { ProductList } from './types/common';
+import { ProductList, ProductListItem } from 'types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
@@ -40,19 +40,20 @@ export const generateWBText = group => {
     ${articleIndentions}`;
 };
 
-export const generateOzonText = (label: string | string[], count: number, id: string, article: string) => {
-    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
-        article.substring(0, 10),
-        article.substring(12, 24),
-        article.substring(20),
-    ];
+export const generateOzonText = (group: ProductListItem) => {
+    const { label, count, id, article } = group;
 
-    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
+    const articleIndentions = article
+        ?.split('_')
+        .map((el, id) => (id % 2 === 0 ? (el = `\n ${el}`) : el))
+        .join('/');
 
     if (typeof id === 'string' && typeof label === 'object') {
+        // @ts-ignore
         return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
     }
 
+    // @ts-ignore
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
         return `Сложный заказ
         \nКоличество: ${count} шт.

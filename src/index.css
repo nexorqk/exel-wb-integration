@@ -1,5 +1,6 @@
 @import 'rsuite/dist/rsuite.css';
 body {
+    background-color: #e57ce544 !important;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans',
         'Droid Sans', 'Helvetica Neue', sans-serif;

@@ -4,12 +4,12 @@ import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText, generateWBText } from './utils';
+import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText, generateWBText } from 'utils';
 import { FONT_URL, Multiplier } from './constants';
-import { OzonFields } from './components/ozon-fields';
+import { OzonFields } from 'components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
-import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
+import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from 'types/common';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -83,11 +83,10 @@ export const App = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map((el: { id: any; label: string }) => ({
+        const arr = productList.map((el: { id: any; label: string; article?: string }) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
-            // @ts-ignore
             article: el.article,
         }));
 
@@ -164,7 +163,6 @@ export const App = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
             const text = wrapText(generateWBText(group), 400, font, 25);
             const pagesForGroup: PDFPage[] = [];
 
@@ -209,7 +207,6 @@ export const App = (): ReactElement => {
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Стикер'],
                     label: el['Название товара'],
-                    // @ts-ignore
                     article: el['Артикул поставщика'] ?? el[articleName[11]],
                 }));
 
@@ -274,86 +271,91 @@ export const App = (): ReactElement => {
     return (
         <div className="root">
             <h1 className="logo-title">WB OZON Stickers</h1>
-            <aside className="rules-article">
-                <ul style={{ listStyle: 'decimal' }}>
-                    <li>Загрузите Excel-файл</li>
-                    <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
-                    <li>Дождитесь загрузки</li>
-                    <li>Нажмите на кнопку Скачать</li>
-                </ul>
-            </aside>
-            <div className="section">
-                <h2>Wildberries Stickers:</h2>
-                <div className="row App">
-                    <div className="input-block">
-                        <label htmlFor="XLSX" className="btn">
-                            Выбрать Excel файл
-                            <input
-                                type="file"
-                                onChange={handleXLSXSelected}
-                                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                className="XLSX-file"
-                                id="XLSX"
-                                name="XLSX_file"
-                                disabled={loading}
-                            />
-                        </label>
-                    </div>
-                    <div className="input-block">
-                        <Whisper
-                            placement="top"
-                            controlId={`control-id-hover`}
-                            trigger="hover"
-                            speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
-                        >
-                            <label htmlFor="PDF" className="btn" aria-disabled>
-                                Выбрать PDF файл
-                                <input
-                                    multiple
-                                    type="file"
-                                    onChange={handlePDFSelected}
-                                    placeholder="Choose 11"
-                                    accept="application/pdf"
-                                    className="PDF-file"
-                                    id="PDF"
-                                    name="PDF_file"
-                                    disabled={disable || loading}
-                                />
-                            </label>
-                        </Whisper>
-                    </div>
+            <div className="main">
+                <aside className="rules-article">
+                    <h2 style={{ textAlign: 'center', marginBottom: 20 }}>Инструкция</h2>
+                    <ul style={{ listStyle: 'decimal' }}>
+                        <li>Загрузите Excel-файл</li>
+                        <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
+                        <li>Дождитесь загрузки</li>
+                        <li>Нажмите на кнопку Скачать</li>
+                    </ul>
+                </aside>
+                <div className="sections">
+                    <div className="section">
+                        <h2>Wildberries Stickers:</h2>
+                        <div className="row App">
+                            <div className="input-block">
+                                <label htmlFor="XLSX" className="btn">
+                                    Выбрать Excel файл
+                                    <input
+                                        type="file"
+                                        onChange={handleXLSXSelected}
+                                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                        className="XLSX-file"
+                                        id="XLSX"
+                                        name="XLSX_file"
+                                        disabled={loading}
+                                    />
+                                </label>
+                            </div>
+                            <div className="input-block">
+                                <Whisper
+                                    placement="top"
+                                    controlId={`control-id-hover`}
+                                    trigger="hover"
+                                    speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
+                                >
+                                    <label htmlFor="PDF" className="btn" aria-disabled>
+                                        Выбрать PDF файл
+                                        <input
+                                            multiple
+                                            type="file"
+                                            onChange={handlePDFSelected}
+                                            placeholder="Choose 11"
+                                            accept="application/pdf"
+                                            className="PDF-file"
+                                            id="PDF"
+                                            name="PDF_file"
+                                            disabled={disable || loading}
+                                        />
+                                    </label>
+                                </Whisper>
+                            </div>
 
-                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
-                        Скачать
-                    </button>
+                            <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                                Скачать
+                            </button>
+                        </div>
+
+                        {!disable && (
+                            <div className="excel-downloaded">
+                                <div className="excel-downloaded-bar">
+                                    <p className="excel-downloaded-label">Excel файл был загружен!</p>
+                                </div>
+                            </div>
+                        )}
+                        {getPdfData && (
+                            <div className="progress">
+                                <div className="progress-bar">
+                                    <label className="progress-label" htmlFor="progress">
+                                        {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
+                                    </label>
+                                    <Progress.Line
+                                        percent={+percent.toFixed(2)}
+                                        id="progress"
+                                        className="progress-line"
+                                        strokeColor={color}
+                                        status={status}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="section">
+                        <OzonFields />
+                    </div>
                 </div>
-
-                {!disable && (
-                    <div className="excel-downloaded">
-                        <div className="excel-downloaded-bar">
-                            <p className="excel-downloaded-label">Excel файл был загружен!</p>
-                        </div>
-                    </div>
-                )}
-                {getPdfData && (
-                    <div className="progress">
-                        <div className="progress-bar">
-                            <label className="progress-label" htmlFor="progress">
-                                {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
-                            </label>
-                            <Progress.Line
-                                percent={+percent.toFixed(2)}
-                                id="progress"
-                                className="progress-line"
-                                strokeColor={color}
-                                status={status}
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
-            <div className="section">
-                <OzonFields />
             </div>
         </div>
     );

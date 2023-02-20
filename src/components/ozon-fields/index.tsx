@@ -11,12 +11,12 @@ import {
     drawTextOnPagesOzon,
     generateOzonText,
     getDuplicatesOrUniques,
-} from '../../utils';
-import '../../App';
+} from 'utils';
+import 'App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
-import { ProductList, ExcelRow } from '../../types/common';
+import { ProductList, ExcelRow } from 'types/common';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -128,11 +128,10 @@ export const OzonFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
-            const { label, count, id, article } = group;
+            console.log(group);
 
             //@ts-ignore
-            const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateOzonText(group), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);

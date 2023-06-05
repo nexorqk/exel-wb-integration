@@ -238,12 +238,7 @@ export const App = (): ReactElement => {
                         pdfDoc.registerFontkit(fontkit);
                         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
                         const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-                        await generateFinalPDF(
-                            pdfDoc,
-                            reader.result as ArrayBuffer,
-                            timesRomanFont,
-                            Multiplier.WILDBERRIES,
-                        );
+                        await generateFinalPDF(pdfDoc, reader.result as ArrayBuffer, timesRomanFont, Multiplier.OZON);
                     };
                 };
                 await onLoad();

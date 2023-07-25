@@ -210,7 +210,7 @@ export const App = (): ReactElement => {
                     id: el['Стикер'],
                     label: el['Название товара'],
                     // @ts-ignore
-                    article: el['Артикул поставщика'] ?? el[articleName[11]],
+                    article: el['Артикул продавца'] ?? el[articleName[11]],
                 }));
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));

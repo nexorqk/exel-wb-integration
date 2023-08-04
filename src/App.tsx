@@ -208,9 +208,8 @@ export const App = (): ReactElement => {
 
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Стикер'],
-                    label: el['Название товара'],
-                    // @ts-ignore
-                    article: el['Артикул продавца'] ?? el[articleName[11]],
+                    label: el['Наименование'],
+                    article: el['Артикул продавца'] ?? el[articleName[13]],
                 }));
 
                 const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));

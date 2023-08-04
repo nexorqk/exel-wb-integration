@@ -80,9 +80,6 @@
 
 .input-block {
     display: flex;
-    flex-direction: column;
-    text-align: start;
-    justify-content: end;
 }
 .input-block label {
     font-family: 'Times New Roman', Times, serif;

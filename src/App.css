@@ -12,6 +12,7 @@
 }
 
 .logo-title {
+    height: 100%;
     margin-left: 30px;
     margin-right: auto;
     color: #8a2be2;
@@ -155,4 +156,8 @@
     stroke: #8a2be2 !important;
     width: 2rem;
     height: 2rem;
+}
+
+.top-article {
+    display: flex;
 }

@@ -10,6 +10,7 @@ import { OzonFields } from './components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
+import { YandexFields } from './components/yandex-fields';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -267,27 +268,29 @@ export const App = (): ReactElement => {
 
     return (
         <div className="root">
-            <h1 className="logo-title">WB OZON Stickers</h1>
-            <aside className="rules-article">
-                <ul style={{ listStyle: 'decimal' }}>
-                    <li>Загрузите Excel-файл</li>
-                    <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
-                    <li>Дождитесь загрузки</li>
-                    <li>Нажмите на кнопку Скачать</li>
-                </ul>
-            </aside>
+            <div className="top-article">
+                <h1 className="logo-title">WB OZON Stickers</h1>
+                <aside className="rules-article">
+                    <ul style={{ listStyle: 'decimal' }}>
+                        <li>Загрузите Excel-файл</li>
+                        <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
+                        <li>Дождитесь загрузки</li>
+                        <li>Нажмите на кнопку Скачать</li>
+                    </ul>
+                </aside>
+            </div>
             <div className="section">
                 <h2>Wildberries Stickers:</h2>
                 <div className="row App">
                     <div className="input-block">
-                        <label htmlFor="XLSX" className="btn">
+                        <label htmlFor="XLSX-yandex" className="btn">
                             Выбрать Excel файл
                             <input
                                 type="file"
                                 onChange={handleXLSXSelected}
                                 accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 className="XLSX-file"
-                                id="XLSX"
+                                id="XLSX-yandex"
                                 name="XLSX_file"
                                 disabled={loading}
                             />
@@ -348,6 +351,9 @@ export const App = (): ReactElement => {
             </div>
             <div className="section">
                 <OzonFields />
+            </div>
+            <div className="section">
+                <YandexFields />
             </div>
         </div>
     );

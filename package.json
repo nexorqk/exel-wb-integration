@@ -13,6 +13,7 @@
         "@types/node": "16.18.10",
         "@types/react": "18.0.26",
         "@types/react-dom": "18.0.10",
+        "clsx": "^2.0.0",
         "pdf-lib": "1.17.1",
         "pdfjs": "2.4.7",
         "pdfjs-dist": "*",

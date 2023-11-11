@@ -1,20 +1,20 @@
 @import 'rsuite/dist/rsuite.css';
 
-* {
-    box-sizing: border-box;
-    user-select: none;
-}
-
-.root {
+.main {
+    padding: 30px;
     display: flex;
     flex-direction: column;
-    margin-top: 20px;
+    align-items: center;
+}
+
+.top-article {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
 .logo-title {
     height: 100%;
-    margin-left: 30px;
-    margin-right: auto;
     color: #8a2be2;
     color: #201f1f;
     border-radius: 10px;
@@ -23,71 +23,32 @@
     box-shadow: rgba(52, 0, 100, 0.4) -5px 5px, rgba(52, 0, 100, 0.3) -10px 10px, rgba(52, 0, 100, 0.2) -15px 15px,
         rgba(52, 0, 100, 0.1) -20px 20px, rgba(52, 0, 100, 0.05) -25px 25px;
     padding: 10px;
-    margin-bottom: 40px;
 }
 
 .rules-article {
     font-size: 1.5rem;
-    font-family: sans-serif;
     color: #dc143c;
     border: 2px solid rebeccapurple;
     box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px, rgba(17, 17, 26, 0.1) 0px 8px 24px,
         rgba(17, 17, 26, 0.1) 0px 16px 48px;
     max-width: 700px;
-    margin-left: 20px;
-    margin-right: auto;
     margin-bottom: 20px;
     background: white;
     padding: 20px;
-    text-align: justify;
 }
 
 .section {
     display: flex;
     flex-direction: column;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.App {
-    margin-top: 30px;
-    text-align: center;
-}
-
-.label {
-    width: 180px;
-    height: 50px;
-    border-radius: 4px;
-    text-align: center;
-    cursor: pointer;
-    display: block;
-    font: 14px/50px Tahoma;
-    transition: all 0.18s ease-in-out;
-    border: 1px solid #333;
-    color: #333;
-}
-
-.label:hover {
-    color: white;
-    background: #333;
+    max-width: 620px;
 }
 
 .row {
+    margin: 10px 0 40px;
+    text-align: center;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    max-width: 1200px;
-}
-
-.input-block {
-    display: flex;
-}
-.input-block label {
-    font-family: 'Times New Roman', Times, serif;
-    line-height: 16px;
-    letter-spacing: 0.1px;
-    font-size: 1.25rem;
-    font-weight: 600;
 }
 
 .PDF-file,
@@ -96,6 +57,7 @@
 }
 
 .btn {
+    display: block;
     width: 215px;
     height: 46px;
     background: #333;
@@ -107,6 +69,11 @@
     font-size: 1.25rem;
     cursor: pointer;
     margin-right: 20px;
+    font-family: 'Times New Roman', Times, serif;
+    line-height: 16px;
+    letter-spacing: 0.1px;
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 .button {
@@ -123,10 +90,6 @@
 
 .disableBtn {
     background: #c9b0e0;
-}
-
-.activeBtn {
-    background: #8a2be2;
 }
 
 .progress,
@@ -156,8 +119,4 @@
     stroke: #8a2be2 !important;
     width: 2rem;
     height: 2rem;
-}
-
-.top-article {
-    display: flex;
 }

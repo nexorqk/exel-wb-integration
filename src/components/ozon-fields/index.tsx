@@ -17,6 +17,7 @@ import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
 import { ProductList, ExcelRow } from '../../types/common';
+import clsx from 'clsx';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -238,47 +239,48 @@ export const OzonFields = (): ReactElement => {
     };
 
     return (
-        <div style={{ marginTop: 40 }}>
+        <div>
             <h2>Ozon Stickers:</h2>
-            <div className="row App">
-                <div className="input-block">
-                    <label htmlFor="XLSX_Ozon" className="btn">
-                        Выбрать CSV файл
-                    </label>
-                    <input
-                        type="file"
-                        onChange={handleXLSXSelected}
-                        accept=".csv"
-                        className="XLSX-file"
-                        id="XLSX_Ozon"
-                        name="XLSX_Ozon_file"
-                        disabled={loading}
-                    />
-                </div>
+            <div className="row">
+                <label htmlFor="XLSX_Ozon" className="btn">
+                    Выбрать CSV файл
+                </label>
+                <input
+                    type="file"
+                    onChange={handleXLSXSelected}
+                    accept=".csv"
+                    className="XLSX-file"
+                    id="XLSX_Ozon"
+                    name="XLSX_Ozon_file"
+                    disabled={loading}
+                />
 
-                <div className="input-block">
-                    <Whisper
-                        placement="top"
-                        controlId={`control-id-hover`}
-                        trigger="hover"
-                        speaker={disableOzon ? <Tooltip>Сначала загрузите CSV файл!</Tooltip> : <div></div>}
-                    >
-                        <label htmlFor="PDF_Ozon" className="btn">
-                            Выбрать PDF файл
-                            <input
-                                type="file"
-                                onChange={handlePDFSelected}
-                                placeholder="Choose 11"
-                                accept="application/pdf"
-                                className="PDF-file"
-                                id="PDF_Ozon"
-                                name="PDF_Ozon_file"
-                                disabled={disableOzon || loading}
-                            />
-                        </label>
-                    </Whisper>
-                </div>
-                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
+                <Whisper
+                    placement="top"
+                    controlId={`control-id-hover`}
+                    trigger="hover"
+                    speaker={disableOzon ? <Tooltip>Сначала загрузите CSV файл!</Tooltip> : <div></div>}
+                >
+                    <label htmlFor="PDF_Ozon" className="btn">
+                        Выбрать PDF файл
+                        <input
+                            type="file"
+                            onChange={handlePDFSelected}
+                            placeholder="Choose 11"
+                            accept="application/pdf"
+                            className="PDF-file"
+                            id="PDF_Ozon"
+                            name="PDF_Ozon_file"
+                            disabled={disableOzon || loading}
+                        />
+                    </label>
+                </Whisper>
+                <button
+                    className={clsx('button', disableOzon && 'disableBtn')}
+                    disabled={!finalPDFOzon}
+                    type="button"
+                    onClick={onClick}
+                >
                     Скачать
                 </button>
             </div>

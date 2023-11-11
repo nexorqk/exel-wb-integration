@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
@@ -16,17 +16,19 @@ import '../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../constants';
 
-import { ProductList, ExcelRow } from '../types/common';
+import { ProductList, ExcelRow, YandexProductList } from '../types/common';
+import clsx from 'clsx';
 
-export const YandexFields = (): ReactElement => {
-    const [yandexProductList, setYandexProductList] = useState<ProductList>([]);
+export const YandexFields = () => {
+    const [yandexProductList, setYandexProductList] = useState<YandexProductList>([]);
     const [getOzonPdfData, setGetOzonPdfData] = useState(false);
+    const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
+    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
     const [percentOzon, setPercentOzon] = useState(0);
-    const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [objectUrlOzon, setObjectUrl] = useState('');
-    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
 
@@ -197,8 +199,6 @@ export const YandexFields = (): ReactElement => {
 
                 const ws = wb.Sheets[wsname];
 
-                console.log('ws', ws);
-
                 const arrayWs = Object.keys(ws);
 
                 const firstWSVlaue = defineFirstWSKey(arrayWs);
@@ -209,18 +209,20 @@ export const YandexFields = (): ReactElement => {
                 };
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws, opts);
 
-                console.log('data', data);
-
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Ваш SKU'],
+                    id: el['Номер заказа'],
+                    sku: el['Ваш SKU'],
                     label: el['Название товара'],
                     count: Number(el['Количество']),
                 }));
 
-                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                console.log(getArgs);
+                const getSortedArr: YandexProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                console.log(getSortedArr);
 
                 setYandexProductList(getSortedArr);
                 setDisableOzon(false);
+                console.log(yandexProductList);
             }
         };
     };
@@ -272,47 +274,48 @@ export const YandexFields = (): ReactElement => {
     };
 
     return (
-        <div style={{ marginTop: 40 }}>
+        <div>
             <h2>Yandex Stickers:</h2>
-            <div className="row App">
-                <div className="input-block">
-                    <label htmlFor="XLSX" className="btn">
-                        Выбрать Excel файл
+            <div className="row">
+                <label htmlFor="XLSX" className="btn">
+                    Выбрать Excel файл
+                    <input
+                        type="file"
+                        onChange={handleXLSXSelected}
+                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                        className="XLSX-file"
+                        id="XLSX"
+                        name="XLSX_file"
+                        disabled={loading}
+                    />
+                </label>
+
+                <Whisper
+                    placement="top"
+                    controlId={`control-id-hover`}
+                    trigger="hover"
+                    speaker={disableOzon ? <Tooltip>Сначала загрузите Excel файл!</Tooltip> : <div></div>}
+                >
+                    <label htmlFor="PDF_Ozon" className="btn">
+                        Выбрать PDF файл
                         <input
                             type="file"
-                            onChange={handleXLSXSelected}
-                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            className="XLSX-file"
-                            id="XLSX"
-                            name="XLSX_file"
-                            disabled={loading}
+                            onChange={handlePDFSelected}
+                            placeholder="Choose 11"
+                            accept="application/pdf"
+                            className="PDF-file"
+                            id="PDF_Ozon"
+                            name="PDF_Ozon_file"
+                            disabled={disableOzon || loading}
                         />
                     </label>
-                </div>
-
-                <div className="input-block">
-                    <Whisper
-                        placement="top"
-                        controlId={`control-id-hover`}
-                        trigger="hover"
-                        speaker={disableOzon ? <Tooltip>Сначала загрузите Excel файл!</Tooltip> : <div></div>}
-                    >
-                        <label htmlFor="PDF_Ozon" className="btn">
-                            Выбрать PDF файл
-                            <input
-                                type="file"
-                                onChange={handlePDFSelected}
-                                placeholder="Choose 11"
-                                accept="application/pdf"
-                                className="PDF-file"
-                                id="PDF_Ozon"
-                                name="PDF_Ozon_file"
-                                disabled={disableOzon || loading}
-                            />
-                        </label>
-                    </Whisper>
-                </div>
-                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
+                </Whisper>
+                <button
+                    className={clsx('button', disableOzon && 'disableBtn')}
+                    disabled={!finalPDFOzon}
+                    type="button"
+                    onClick={onClick}
+                >
                     Скачать
                 </button>
             </div>

@@ -14,6 +14,15 @@ export interface ProductListItem {
 }
 export type ProductList = ProductListItem[];
 
+export interface YandexProductListItem {
+    id: string;
+    sku: string;
+    label: string;
+    count: number;
+}
+
+export type YandexProductList = YandexProductListItem[];
+
 export interface AccomulatorItem {
     label: string;
     id: string | string[];

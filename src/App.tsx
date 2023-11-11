@@ -11,6 +11,7 @@ import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 import { YandexFields } from './components/yandex-fields';
+import clsx from 'clsx';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -267,7 +268,7 @@ export const App = (): ReactElement => {
     };
 
     return (
-        <div className="root">
+        <div className="main">
             <div className="top-article">
                 <h1 className="logo-title">WB OZON Stickers</h1>
                 <aside className="rules-article">
@@ -281,46 +282,47 @@ export const App = (): ReactElement => {
             </div>
             <div className="section">
                 <h2>Wildberries Stickers:</h2>
-                <div className="row App">
-                    <div className="input-block">
-                        <label htmlFor="XLSX-yandex" className="btn">
-                            Выбрать Excel файл
+                <div className="row">
+                    <label htmlFor="XLSX-yandex" className="btn">
+                        Выбрать Excel файл
+                        <input
+                            type="file"
+                            onChange={handleXLSXSelected}
+                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            className="XLSX-file"
+                            id="XLSX-yandex"
+                            name="XLSX_file"
+                            disabled={loading}
+                        />
+                    </label>
+                    <Whisper
+                        placement="top"
+                        controlId={`control-id-hover`}
+                        trigger="hover"
+                        speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
+                    >
+                        <label htmlFor="PDF" className="btn" aria-disabled>
+                            Выбрать PDF файл
                             <input
+                                multiple
                                 type="file"
-                                onChange={handleXLSXSelected}
-                                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                className="XLSX-file"
-                                id="XLSX-yandex"
-                                name="XLSX_file"
-                                disabled={loading}
+                                onChange={handlePDFSelected}
+                                placeholder="Choose 11"
+                                accept="application/pdf"
+                                className="PDF-file"
+                                id="PDF"
+                                name="PDF_file"
+                                disabled={disable || loading}
                             />
                         </label>
-                    </div>
-                    <div className="input-block">
-                        <Whisper
-                            placement="top"
-                            controlId={`control-id-hover`}
-                            trigger="hover"
-                            speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
-                        >
-                            <label htmlFor="PDF" className="btn" aria-disabled>
-                                Выбрать PDF файл
-                                <input
-                                    multiple
-                                    type="file"
-                                    onChange={handlePDFSelected}
-                                    placeholder="Choose 11"
-                                    accept="application/pdf"
-                                    className="PDF-file"
-                                    id="PDF"
-                                    name="PDF_file"
-                                    disabled={disable || loading}
-                                />
-                            </label>
-                        </Whisper>
-                    </div>
+                    </Whisper>
 
-                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                    <button
+                        className={clsx('button', disable && 'disableBtn')}
+                        disabled={!mergedPDF}
+                        type="button"
+                        onClick={() => onClick()}
+                    >
                         Скачать
                     </button>
                 </div>
@@ -348,11 +350,7 @@ export const App = (): ReactElement => {
                         </div>
                     </div>
                 )}
-            </div>
-            <div className="section">
                 <OzonFields />
-            </div>
-            <div className="section">
                 <YandexFields />
             </div>
         </div>

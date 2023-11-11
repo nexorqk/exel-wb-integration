@@ -162,7 +162,7 @@ export const YandexFields = (): ReactElement => {
         return finalPdf;
     };
 
-    const defineLastWsKey = (arr: string[]) => {
+    const defineLastWSKey = (arr: string[]) => {
         if (arr[arr.length - 1] === '!merges') {
             if (arr[arr.length - 2] === '!margins') {
                 return arr[arr.length - 3];
@@ -171,6 +171,18 @@ export const YandexFields = (): ReactElement => {
         }
 
         return arr[arr.length - 1];
+    };
+
+    const defineFirstWSKey = (arr: string[]) => {
+        if (arr[0] === 'Информация о заказе') {
+            return 'A2';
+        }
+
+        if (arr[0] === 'Номер заказа') {
+            return 'A1';
+        }
+
+        return 'A2';
     };
 
     const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,12 +201,11 @@ export const YandexFields = (): ReactElement => {
 
                 const arrayWs = Object.keys(ws);
 
-                // const lastKeyValue = arrayWs[arrayWs.length - 3];
-
-                const lastKeyValue = defineLastWsKey(arrayWs);
+                const firstWSVlaue = defineFirstWSKey(arrayWs);
+                const lastWSKey = defineLastWSKey(arrayWs);
 
                 const opts = {
-                    range: `A2:${lastKeyValue}`,
+                    range: `${firstWSVlaue}:${lastWSKey}`,
                 };
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws, opts);
 

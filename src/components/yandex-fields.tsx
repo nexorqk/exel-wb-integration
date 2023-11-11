@@ -162,6 +162,17 @@ export const YandexFields = (): ReactElement => {
         return finalPdf;
     };
 
+    const defineLastWsKey = (arr: string[]) => {
+        if (arr[arr.length - 1] === '!merges') {
+            if (arr[arr.length - 2] === '!margins') {
+                return arr[arr.length - 3];
+            }
+            return arr[arr.length - 2];
+        }
+
+        return arr[arr.length - 1];
+    };
+
     const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const fileReader = new FileReader();
         if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
@@ -171,11 +182,24 @@ export const YandexFields = (): ReactElement => {
                 const bufferArray = e?.target.result;
                 const wb = XLSX.read(bufferArray, { type: 'buffer' });
                 const wsname = wb.SheetNames[0];
-                const ws = wb.Sheets[wsname];
-                console.log(ws);
-                const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws);
 
-                console.log(data);
+                const ws = wb.Sheets[wsname];
+
+                console.log('ws', ws);
+
+                const arrayWs = Object.keys(ws);
+
+                // const lastKeyValue = arrayWs[arrayWs.length - 3];
+
+                const lastKeyValue = defineLastWsKey(arrayWs);
+
+                const opts = {
+                    range: `A2:${lastKeyValue}`,
+                };
+                const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws, opts);
+
+                console.log('data', data);
+
                 const getArgs = data.map((el: ExcelRow) => ({
                     id: el['Ваш SKU'],
                     label: el['Название товара'],

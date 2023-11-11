@@ -143,3 +143,26 @@ export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =
         arr.splice(index, 0, item);
         return unique;
     });
+
+export const defineLastWSKey = (arr: string[]) => {
+    if (arr[arr.length - 1] === '!merges') {
+        if (arr[arr.length - 2] === '!margins') {
+            return arr[arr.length - 3];
+        }
+        return arr[arr.length - 2];
+    }
+
+    return arr[arr.length - 1];
+};
+
+export const defineFirstWSKey = (arr: string[]) => {
+    if (arr[0] === 'Информация о заказе') {
+        return 'A2';
+    }
+
+    if (arr[0] === 'Номер заказа') {
+        return 'A1';
+    }
+
+    return 'A2';
+};

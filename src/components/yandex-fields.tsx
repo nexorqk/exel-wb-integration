@@ -11,6 +11,8 @@ import {
     drawTextOnPagesOzon,
     generateOzonText,
     getDuplicatesOrUniques,
+    defineFirstWSKey,
+    defineLastWSKey,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
@@ -164,29 +166,6 @@ export const YandexFields = () => {
         return finalPdf;
     };
 
-    const defineLastWSKey = (arr: string[]) => {
-        if (arr[arr.length - 1] === '!merges') {
-            if (arr[arr.length - 2] === '!margins') {
-                return arr[arr.length - 3];
-            }
-            return arr[arr.length - 2];
-        }
-
-        return arr[arr.length - 1];
-    };
-
-    const defineFirstWSKey = (arr: string[]) => {
-        if (arr[0] === 'Информация о заказе') {
-            return 'A2';
-        }
-
-        if (arr[0] === 'Номер заказа') {
-            return 'A1';
-        }
-
-        return 'A2';
-    };
-
     const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const fileReader = new FileReader();
         if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
@@ -216,13 +195,10 @@ export const YandexFields = () => {
                     count: Number(el['Количество']),
                 }));
 
-                console.log(getArgs);
                 const getSortedArr: YandexProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
-                console.log(getSortedArr);
 
                 setYandexProductList(getSortedArr);
                 setDisableOzon(false);
-                console.log(yandexProductList);
             }
         };
     };
@@ -272,7 +248,8 @@ export const YandexFields = () => {
             alink.click();
         }
     };
-
+    console.log(yandexProductList);
+    console.log(disableOzon);
     return (
         <div>
             <h2>Yandex Stickers:</h2>
@@ -296,7 +273,7 @@ export const YandexFields = () => {
                     trigger="hover"
                     speaker={disableOzon ? <Tooltip>Сначала загрузите Excel файл!</Tooltip> : <div></div>}
                 >
-                    <label htmlFor="PDF_Ozon" className="btn">
+                    <label htmlFor="PDF_Yandex" className="btn">
                         Выбрать PDF файл
                         <input
                             type="file"
@@ -304,14 +281,14 @@ export const YandexFields = () => {
                             placeholder="Choose 11"
                             accept="application/pdf"
                             className="PDF-file"
-                            id="PDF_Ozon"
+                            id="PDF_Yandex"
                             name="PDF_Ozon_file"
                             disabled={disableOzon || loading}
                         />
                     </label>
                 </Whisper>
                 <button
-                    className={clsx('button', disableOzon && 'disableBtn')}
+                    className={clsx('button', status !== 'success' && 'disableBtn')}
                     disabled={!finalPDFOzon}
                     type="button"
                     onClick={onClick}

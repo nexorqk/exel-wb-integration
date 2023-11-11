@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useReducer, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
@@ -13,26 +13,28 @@ import {
     getDuplicatesOrUniques,
     defineFirstWSKey,
     defineLastWSKey,
-} from '../utils';
-import '../App';
+} from '../../utils';
+import '../../App';
 import 'rsuite/dist/rsuite.min.css';
-import { FONT_URL, Multiplier, pageSizeOzon } from '../constants';
+import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
-import { ProductList, ExcelRow, YandexProductList } from '../types/common';
 import clsx from 'clsx';
+import { ActionType, initialState, yandexReducer } from './reducer';
+import { ExcelRow, ProductList, YandexProductListItem } from '../../types/common';
 
-export const YandexFields = () => {
-    const [yandexProductList, setYandexProductList] = useState<YandexProductList>([]);
-    const [getOzonPdfData, setGetOzonPdfData] = useState(false);
+export const YandexFields = (): ReactElement => {
+    // const [yandexProductList, setYandexProductList] = useState<ProductList>([]);
+    // const [getYandexPdfData, setGetYandexPdfData] = useState(false);
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
     const [percentOzon, setPercentOzon] = useState(0);
     const [objectUrlOzon, setObjectUrl] = useState('');
     const status = percentOzon === 100 ? 'success' : 'active';
     const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
+
+    const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -113,8 +115,8 @@ export const YandexFields = () => {
             setPercentOzon(getPercent * index);
         }
 
-        const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
-        const duplicatedOrders = getDuplicatesOrUniques(yandexProductList, true);
+        const uniqueOrders = getDuplicatesOrUniques(yandexData.yandexProductData);
+        const duplicatedOrders = getDuplicatesOrUniques(yandexData.yandexProductData, true);
         const simpleOrders = uniqueOrders.filter(item => item.count === 1);
         const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
 
@@ -195,13 +197,18 @@ export const YandexFields = () => {
                     count: Number(el['Количество']),
                 }));
 
-                const getSortedArr: YandexProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                const getSortedArr: YandexProductListItem[] = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 
-                setYandexProductList(getSortedArr);
+                dispatch({
+                    type: ActionType.ADD_YANDEX_PRODUCT,
+                    payload: getSortedArr,
+                });
                 setDisableOzon(false);
             }
         };
     };
+
+    console.log('yandexData', yandexData);
 
     const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLoading(true);
@@ -228,9 +235,16 @@ export const YandexFields = () => {
             setPdfBytes(pdfBytes);
         };
 
-        setGetOzonPdfData(true);
+        dispatch({
+            type: ActionType.IS_YANDEX_PDF_DATA,
+            payload: true,
+        });
+        dispatch({
+            type: ActionType.IS_LOADING,
+            payload: false,
+        });
+
         setDisableOzon(true);
-        setLoading(false);
     };
 
     const onClick = async () => {
@@ -248,7 +262,6 @@ export const YandexFields = () => {
             alink.click();
         }
     };
-    console.log(yandexProductList);
     console.log(disableOzon);
     return (
         <div>
@@ -303,7 +316,7 @@ export const YandexFields = () => {
                     </div>
                 </div>
             )}
-            {getOzonPdfData && (
+            {yandexData.isYandexPDFData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">

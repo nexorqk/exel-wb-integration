@@ -10,8 +10,8 @@ import { OzonFields } from './components/ozon-fields';
 import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
-import { YandexFields } from './components/yandex-fields';
 import clsx from 'clsx';
+import { YandexFields } from './components/yandex/yandex-fields';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);

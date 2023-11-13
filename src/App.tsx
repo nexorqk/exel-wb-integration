@@ -317,12 +317,7 @@ export const App = (): ReactElement => {
                         </label>
                     </Whisper>
 
-                    <button
-                        className={clsx('button', disable && 'disableBtn')}
-                        disabled={!mergedPDF}
-                        type="button"
-                        onClick={() => onClick()}
-                    >
+                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
                         Скачать
                     </button>
                 </div>

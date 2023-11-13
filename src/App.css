@@ -88,10 +88,6 @@
     cursor: pointer;
 }
 
-.disableBtn {
-    background: #c9b0e0;
-}
-
 .progress,
 .excel-downloaded {
     display: flex;

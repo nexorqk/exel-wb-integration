@@ -9,7 +9,6 @@ import {
     setWorkerSrc,
     resizeOzonPdfPages,
     drawTextOnPagesOzon,
-    generateOzonText,
     getDuplicatesOrUniques,
     defineFirstWSKey,
     defineLastWSKey,
@@ -47,6 +46,7 @@ export const YandexFields = (): ReactElement => {
         const page = await doc.getPage(number);
 
         const item = await page.getTextContent();
+        console.log(item);
         //@ts-ignore
         const oneArgs = { id: item.items[4].str };
         //@ts-ignore
@@ -109,7 +109,6 @@ export const YandexFields = (): ReactElement => {
 
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
-
             if (id as any) pageIds.push(id as any);
             const getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
@@ -134,18 +133,13 @@ export const YandexFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
-            const { label, count, id, article } = group;
-
             //@ts-ignore
-            const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateYandexText(group), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
-
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
-
             for (let i = 0; i < pageCount.length; i++) {
                 // @ts-ignore
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
+                if (typeof group.id === 'number' && pageIds[i].id.includes(group.id)) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     // @ts-ignore
@@ -223,7 +217,7 @@ export const YandexFields = (): ReactElement => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-
+            console.log(pdfDoc);
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,
@@ -262,7 +256,6 @@ export const YandexFields = (): ReactElement => {
             alink.click();
         }
     };
-    console.log(disableOzon);
     return (
         <div>
             <h2>Yandex Stickers:</h2>
@@ -300,12 +293,7 @@ export const YandexFields = (): ReactElement => {
                         />
                     </label>
                 </Whisper>
-                <button
-                    className={clsx('button', status !== 'success' && 'disableBtn')}
-                    disabled={!finalPDFOzon}
-                    type="button"
-                    onClick={onClick}
-                >
+                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
                 </button>
             </div>

@@ -65,6 +65,27 @@ export const generateOzonText = (label: string | string[], count: number, id: st
     ${articleIndentions}`;
 };
 
+export const generateYandexText = (group: any) => {
+    const { id, count, label, sku } = group;
+
+    const articleIndentions = sku;
+
+    if (typeof id === 'string' && typeof label === 'object') {
+        return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
+    }
+
+    if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
+        return `Сложный заказ
+        \nКоличество: ${count} шт.
+        \n${label}
+        ${articleIndentions}
+        `;
+    }
+    return `\n${label}
+    \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.
+    ${articleIndentions}`;
+};
+
 export const resizePdfPages = (pages: PDFPage[]) => {
     const new_size = pageSize;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);

@@ -17,7 +17,6 @@ import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
 import { ProductList, ExcelRow } from '../../types/common';
-import clsx from 'clsx';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -275,12 +274,7 @@ export const OzonFields = (): ReactElement => {
                         />
                     </label>
                 </Whisper>
-                <button
-                    className={clsx('button', disableOzon && 'disableBtn')}
-                    disabled={!finalPDFOzon}
-                    type="button"
-                    onClick={onClick}
-                >
+                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
                 </button>
             </div>

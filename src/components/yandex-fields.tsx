@@ -9,17 +9,16 @@ import {
     setWorkerSrc,
     resizeOzonPdfPages,
     drawTextOnPagesOzon,
-    generateOzonText,
     getDuplicatesOrUniques,
     defineFirstWSKey,
     defineLastWSKey,
+    generateYandexText,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../constants';
 
 import { ProductList, ExcelRow, YandexProductList } from '../types/common';
-import clsx from 'clsx';
 
 export const YandexFields = () => {
     const [yandexProductList, setYandexProductList] = useState<YandexProductList>([]);
@@ -45,6 +44,7 @@ export const YandexFields = () => {
         const page = await doc.getPage(number);
 
         const item = await page.getTextContent();
+        console.log(item);
         //@ts-ignore
         const oneArgs = { id: item.items[4].str };
         //@ts-ignore
@@ -107,7 +107,6 @@ export const YandexFields = () => {
 
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getOzonPDFText(pdfBuffer, index);
-
             if (id as any) pageIds.push(id as any);
             const getPercent = 100 / pageCount.length;
             setPercentOzon(getPercent * index);
@@ -132,18 +131,13 @@ export const YandexFields = () => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
-            const { label, count, id, article } = group;
-
             //@ts-ignore
-            const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateYandexText(group), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
-
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
-
             for (let i = 0; i < pageCount.length; i++) {
                 // @ts-ignore
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
+                if (typeof group.id === 'number' && pageIds[i].id.includes(group.id)) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     // @ts-ignore
@@ -216,7 +210,7 @@ export const YandexFields = () => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-
+            console.log(pdfDoc);
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,
@@ -248,8 +242,7 @@ export const YandexFields = () => {
             alink.click();
         }
     };
-    console.log(yandexProductList);
-    console.log(disableOzon);
+
     return (
         <div>
             <h2>Yandex Stickers:</h2>
@@ -287,12 +280,7 @@ export const YandexFields = () => {
                         />
                     </label>
                 </Whisper>
-                <button
-                    className={clsx('button', status !== 'success' && 'disableBtn')}
-                    disabled={!finalPDFOzon}
-                    type="button"
-                    onClick={onClick}
-                >
+                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
                 </button>
             </div>

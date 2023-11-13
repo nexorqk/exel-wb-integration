@@ -11,7 +11,6 @@ import './App.css';
 import 'rsuite/dist/rsuite.min.css';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 import { YandexFields } from './components/yandex-fields';
-import clsx from 'clsx';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -317,12 +316,7 @@ export const App = (): ReactElement => {
                         </label>
                     </Whisper>
 
-                    <button
-                        className={clsx('button', disable && 'disableBtn')}
-                        disabled={!mergedPDF}
-                        type="button"
-                        onClick={() => onClick()}
-                    >
+                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
                         Скачать
                     </button>
                 </div>

@@ -8,6 +8,11 @@ export const pageSizeOzon = {
     height: 144,
 };
 
+export const pageSizeYandex = {
+    width: 356,
+    height: 228,
+};
+
 export const FONT_URL = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf';
 
 export enum Multiplier {

@@ -1,5 +1,5 @@
 import { ProductList } from './types/common';
-import { PDFFont, PDFPage, rgb } from 'pdf-lib';
+import { PDFFont, PDFPage, degrees, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
 
@@ -27,8 +27,7 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
-//@ts-ignore
-export const generateWBText = group => {
+export const generateWBText = (group: any) => {
     const { text, article } = group;
 
     const [ARTICLE_1, ARTICLE_2] = [article.substring(0, 25), article.substring(25)];
@@ -68,7 +67,14 @@ export const generateOzonText = (label: string | string[], count: number, id: st
 export const generateYandexText = (group: any) => {
     const { id, count, label, sku } = group;
 
-    const articleIndentions = sku;
+    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
+        sku.substring(0, 14),
+        sku.substring(14, 28),
+        sku.substring(28, 42),
+        sku.substring(42),
+    ];
+
+    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
 
     if (typeof id === 'string' && typeof label === 'object') {
         return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
@@ -124,6 +130,27 @@ export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
     });
 };
 
+export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
+    const new_size = pageSizeYandex;
+    const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
+
+    pages.forEach(page => {
+        const { width, height } = page.getMediaBox();
+        const size_ratio = Math.round((width / height) * 100);
+
+        if (Math.abs(new_size_ratio - size_ratio) > 1) {
+            page.setSize(new_size.width, new_size.height);
+            const scale_content = Math.min(new_size.width / width, new_size.height / height);
+
+            page.scaleContent(scale_content, scale_content);
+        } else {
+            console.log('scale', new_size.width / width);
+            console.log('height', new_size.height / height);
+            page.scale(new_size.width / width, new_size.height / height);
+        }
+    });
+};
+
 export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
     page.drawText(text, {
         x: 100,
@@ -139,6 +166,17 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
     page.drawText(text, {
         x: 30,
         y: 900,
+        size: 50,
+        font: font,
+        lineHeight: 40,
+        color: rgb(0, 0, 0),
+    });
+};
+
+export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
+    page.drawText(text, {
+        x: 100,
+        y: 650,
         size: 50,
         font: font,
         lineHeight: 40,

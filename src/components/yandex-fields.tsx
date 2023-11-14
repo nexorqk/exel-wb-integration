@@ -7,16 +7,16 @@ import { pdfjs } from 'react-pdf';
 import {
     wrapText,
     setWorkerSrc,
-    resizeOzonPdfPages,
-    drawTextOnPagesOzon,
     getDuplicatesOrUniques,
     defineFirstWSKey,
     defineLastWSKey,
     generateYandexText,
+    resizeYandexPdfPages,
+    drawTextOnPagesYandex,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
-import { FONT_URL, Multiplier, pageSizeOzon } from '../constants';
+import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
 
 import { ProductList, ExcelRow, YandexProductList } from '../types/common';
 
@@ -44,7 +44,6 @@ export const YandexFields = () => {
         const page = await doc.getPage(number);
 
         const item = await page.getTextContent();
-        console.log(item);
         //@ts-ignore
         const oneArgs = { id: item.items[4].str };
         //@ts-ignore
@@ -127,14 +126,13 @@ export const YandexFields = () => {
         sortedArr.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
-            resizeOzonPdfPages(pages, pageSizeOzon);
+            resizeYandexPdfPages(pages, pageSizeYandex);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            //@ts-ignore
             const text = wrapText(generateYandexText(group), 200, font, 20).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
-            drawTextOnPagesOzon(lastPage, text, timesRomanFont);
+            drawTextOnPagesYandex(lastPage, text, timesRomanFont);
             for (let i = 0; i < pageCount.length; i++) {
                 // @ts-ignore
                 if (typeof group.id === 'number' && pageIds[i].id.includes(group.id)) {
@@ -210,7 +208,6 @@ export const YandexFields = () => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-            console.log(pdfDoc);
             const finalPDFOzon = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,

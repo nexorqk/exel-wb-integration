@@ -93,8 +93,6 @@ export const resizePdfPages = (pages: PDFPage[]) => {
 
     pages.forEach(page => {
         const { width, height } = page.getMediaBox();
-        const media = page.getMediaBox();
-        console.log(media);
         const size_ratio = Math.round((width / height) * 100);
 
         if (Math.abs(new_size_ratio - size_ratio) > 1) {
@@ -170,11 +168,11 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
 
 export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
     page.drawText(text, {
-        x: 50,
+        x: 30,
         y: 800,
-        size: 60,
+        size: 55,
         font: font,
-        lineHeight: 50,
+        lineHeight: 45,
         color: rgb(0, 0, 0),
     });
 };

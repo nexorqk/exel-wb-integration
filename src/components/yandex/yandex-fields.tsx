@@ -250,7 +250,7 @@ export const YandexFields = (): ReactElement => {
             const fileURL = window.URL.createObjectURL(pdfBlob);
             const alink = document.createElement('a');
             alink.href = fileURL;
-            alink.download = 'SamplePDF.pdf';
+            alink.download = 'YandexSample.pdf';
             alink.click();
         }
     };

@@ -1,5 +1,5 @@
 import { ProductList } from './types/common';
-import { PDFFont, PDFPage, degrees, rgb } from 'pdf-lib';
+import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
 
@@ -67,12 +67,7 @@ export const generateOzonText = (label: string | string[], count: number, id: st
 export const generateYandexText = (group: any) => {
     const { id, count, label, sku } = group;
 
-    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
-        sku.substring(0, 14),
-        sku.substring(14, 28),
-        sku.substring(28, 42),
-        sku.substring(42),
-    ];
+    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [sku.substring(0, 28), sku.substring(28, 56), sku.substring(56)];
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
 
@@ -98,6 +93,8 @@ export const resizePdfPages = (pages: PDFPage[]) => {
 
     pages.forEach(page => {
         const { width, height } = page.getMediaBox();
+        const media = page.getMediaBox();
+        console.log(media);
         const size_ratio = Math.round((width / height) * 100);
 
         if (Math.abs(new_size_ratio - size_ratio) > 1) {
@@ -144,8 +141,6 @@ export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
 
             page.scaleContent(scale_content, scale_content);
         } else {
-            console.log('scale', new_size.width / width);
-            console.log('height', new_size.height / height);
             page.scale(new_size.width / width, new_size.height / height);
         }
     });
@@ -175,11 +170,11 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
 
 export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
     page.drawText(text, {
-        x: 100,
-        y: 650,
-        size: 50,
+        x: 50,
+        y: 800,
+        size: 60,
         font: font,
-        lineHeight: 40,
+        lineHeight: 50,
         color: rgb(0, 0, 0),
     });
 };

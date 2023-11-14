@@ -166,7 +166,6 @@ export const App = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
             const text = wrapText(generateWBText(group), 400, font, 25);
             const pagesForGroup: PDFPage[] = [];
 

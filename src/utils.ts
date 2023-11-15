@@ -67,9 +67,14 @@ export const generateOzonText = (label: string | string[], count: number, id: st
 export const generateYandexText = (group: any) => {
     const { id, count, label, sku } = group;
 
-    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [sku.substring(0, 28), sku.substring(28, 56), sku.substring(56)];
+    const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
+        sku.substring(0, 14),
+        sku.substring(14, 28),
+        sku.substring(28, 42),
+        sku.substring(42),
+    ];
 
-    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
+    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
 
     if (typeof id === 'string' && typeof label === 'object') {
         return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
@@ -134,11 +139,10 @@ export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
         const size_ratio = Math.round((width / height) * 100);
 
         if (Math.abs(new_size_ratio - size_ratio) > 1) {
-            page.setSize(new_size.width, new_size.height);
             const scale_content = Math.min(new_size.width / width, new_size.height / height);
-
-            page.scaleContent(scale_content, scale_content);
+            page.scale(scale_content, scale_content);
         } else {
+            page.setSize(new_size.width, new_size.height);
             page.scale(new_size.width / width, new_size.height / height);
         }
     });
@@ -170,9 +174,9 @@ export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont
     page.drawText(text, {
         x: 30,
         y: 800,
-        size: 55,
+        size: 50,
         font: font,
-        lineHeight: 45,
+        lineHeight: 40,
         color: rgb(0, 0, 0),
     });
 };

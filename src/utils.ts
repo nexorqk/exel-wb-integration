@@ -130,7 +130,7 @@ export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
     });
 };
 
-export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
+export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any, pdfDoc: any) => {
     const new_size = pageSizeYandex;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -140,12 +140,14 @@ export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
 
         if (Math.abs(new_size_ratio - size_ratio) > 1) {
             const scale_content = Math.min(new_size.width / width, new_size.height / height);
-            page.scale(scale_content, scale_content);
+
+            page.scale(scale_content * 1.45, scale_content * 1.45);
         } else {
             page.setSize(new_size.width, new_size.height);
             page.scale(new_size.width / width, new_size.height / height);
         }
     });
+    // return pdfDoc.save();
 };
 
 export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {
@@ -221,4 +223,19 @@ export const defineFirstWSKey = (arr: string[]) => {
     }
 
     return 'A2';
+};
+
+export const dateTimeForFileName = (): string => {
+    const date = new Date();
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const seconds = date.getSeconds();
+
+    const currentDate = `${day}_${month}_${year}_${hours}_${minutes}_${seconds}`;
+
+    return currentDate;
 };

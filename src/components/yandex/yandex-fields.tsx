@@ -13,6 +13,7 @@ import {
     generateYandexText,
     resizeYandexPdfPages,
     drawTextOnPagesYandex,
+    dateTimeForFileName,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
@@ -52,7 +53,6 @@ export const YandexFields = (): ReactElement => {
         //@ts-ignore
         pageIds.push(oneArgs);
     };
-
     const getSortedArray = (productList: ProductList) => {
         const result = Object.values(
             productList.reduce((acc: any, item: any) => {
@@ -128,7 +128,7 @@ export const YandexFields = (): ReactElement => {
         sortedArr.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
-            resizeYandexPdfPages(pages, pageSizeYandex);
+            resizeYandexPdfPages(pages, pageSizeYandex, pdfDocument);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
@@ -249,7 +249,7 @@ export const YandexFields = (): ReactElement => {
             const fileURL = window.URL.createObjectURL(pdfBlob);
             const alink = document.createElement('a');
             alink.href = fileURL;
-            alink.download = 'YandexSample.pdf';
+            alink.download = `YandexSampleFile_${dateTimeForFileName()}.pdf`;
             alink.click();
         }
     };

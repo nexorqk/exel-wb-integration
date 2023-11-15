@@ -48,7 +48,7 @@ export const YandexFields = (): ReactElement => {
 
         const item = await page.getTextContent();
         //@ts-ignore
-        const oneArgs = { id: item.items[4].str };
+        const oneArgs = { id: item.items[0].str };
         //@ts-ignore
         pageIds.push(oneArgs);
     };
@@ -123,7 +123,6 @@ export const YandexFields = (): ReactElement => {
         const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
-
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
         sortedArr.forEach(async group => {
@@ -138,7 +137,7 @@ export const YandexFields = (): ReactElement => {
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);
             for (let i = 0; i < pageCount.length; i++) {
                 // @ts-ignore
-                if (typeof group.id === 'number' && pageIds[i].id.includes(group.id)) {
+                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     // @ts-ignore
@@ -184,7 +183,7 @@ export const YandexFields = (): ReactElement => {
                 const data: ExcelRow[] = XLSX.utils.sheet_to_json(ws, opts);
 
                 const getArgs = data.map((el: ExcelRow) => ({
-                    id: el['Номер заказа'],
+                    id: `${el['Номер заказа']}`,
                     sku: el['Ваш SKU'],
                     label: el['Название товара'],
                     count: Number(el['Количество']),

@@ -116,3 +116,13 @@
     width: 2rem;
     height: 2rem;
 }
+
+.reviewLink{
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.reviewLink_label{
+    font-size: 16px;
+    font-weight: 700;
+}

@@ -28,6 +28,8 @@ export const YandexFields = (): ReactElement => {
     // const [getYandexPdfData, setGetYandexPdfData] = useState(false);
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+    const [fileLink, setFileLink] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
     const [percentOzon, setPercentOzon] = useState(0);
@@ -128,11 +130,11 @@ export const YandexFields = (): ReactElement => {
         sortedArr.forEach(async group => {
             finalPdf.addPage();
             const pages = finalPdf.getPages();
-            resizeYandexPdfPages(pages, pageSizeYandex, pdfDocument);
+            resizeYandexPdfPages(pages, pageSizeYandex);
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            const text = wrapText(generateYandexText(group), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(generateYandexText(group), 200, font, 18).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);
             for (let i = 0; i < pageCount.length; i++) {
@@ -224,6 +226,13 @@ export const YandexFields = (): ReactElement => {
             const pdfBytes = await finalPDFOzon.save();
             setFinalPDFOzon(finalPDFOzon);
             setPdfBytes(pdfBytes);
+
+            if (finalPDFOzon && pdfBytes) {
+                const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                setObjectUrl(URL.createObjectURL(pdfBlob));
+                const fileURL = window.URL.createObjectURL(pdfBlob);
+                setFileLink(fileURL);
+            }
         };
 
         dispatch({
@@ -243,16 +252,19 @@ export const YandexFields = (): ReactElement => {
             if (objectUrlOzon) {
                 URL.revokeObjectURL(objectUrlOzon);
             }
-            const pdfBytes = await finalPDFOzon.save();
-            const pdfBlob = new Blob([pdfBytes]);
-            setObjectUrl(URL.createObjectURL(pdfBlob));
-            const fileURL = window.URL.createObjectURL(pdfBlob);
             const alink = document.createElement('a');
-            alink.href = fileURL;
+            alink.href = fileLink;
             alink.download = `YandexSampleFile_${dateTimeForFileName()}.pdf`;
             alink.click();
         }
     };
+
+    const openFile = () => {
+        if (pdfBytes) {
+            open(objectUrlOzon);
+        }
+    };
+
     return (
         <div>
             <h2>Yandex Stickers:</h2>
@@ -301,7 +313,16 @@ export const YandexFields = (): ReactElement => {
                     </div>
                 </div>
             )}
-            {yandexData.isYandexPDFData && (
+
+            {fileLink.length !== 0 && (
+                <div>
+                    <span className='reviewLink_label'>Предпросмотр: </span>
+                    <a className="reviewLink" onClick={openFile} target="_blank" rel="noreferrer">
+                        Yandex Sample PDF
+                    </a>
+                </div>
+            )}
+            {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">

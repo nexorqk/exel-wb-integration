@@ -14,6 +14,7 @@ import {
     resizeYandexPdfPages,
     drawTextOnPagesYandex,
     dateTimeForFileName,
+    compareAndDelete,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
@@ -113,9 +114,11 @@ export const YandexFields = () => {
         }
 
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
+        const comparedArray = compareAndDelete(uniqueOrders, pageIds)
+        
         const duplicatedOrders = getDuplicatesOrUniques(yandexProductList, true);
-        const simpleOrders = uniqueOrders.filter(item => item.count === 1);
-        const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
+        const simpleOrders = comparedArray.filter(item => item.count === 1);
+        const difficultOrders = comparedArray.filter(item => item.count !== 1);
 
         const sortedSimpleOrders = getSortedArray(simpleOrders);
         const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);

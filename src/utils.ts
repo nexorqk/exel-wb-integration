@@ -1,4 +1,4 @@
-import { ProductList } from './types/common';
+import { ProductList, ProductListItem } from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
@@ -237,4 +237,15 @@ export const dateTimeForFileName = (): string => {
     const currentDate = `${day}_${month}_${year}_${hours}_${minutes}_${seconds}`;
 
     return currentDate;
+};
+
+export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
+    const array = pageIds.map((el: { id: any }) => el.id);
+
+    const newArray = xlsIds.filter(obj => array.includes(obj.id));
+
+    xlsIds.length = 0;
+    xlsIds.push(...newArray);
+
+    return newArray;
 };

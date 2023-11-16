@@ -68,10 +68,10 @@ export const generateYandexText = (group: any) => {
     const { id, count, label, sku } = group;
 
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
-        sku.substring(0, 14),
-        sku.substring(14, 28),
-        sku.substring(28, 42),
-        sku.substring(42),
+        sku.substring(0, 16),
+        sku.substring(16, 32),
+        sku.substring(32, 48),
+        sku.substring(48),
     ];
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
@@ -130,7 +130,7 @@ export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
     });
 };
 
-export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any, pdfDoc: any) => {
+export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
     const new_size = pageSizeYandex;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -141,13 +141,12 @@ export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any, pdfD
         if (Math.abs(new_size_ratio - size_ratio) > 1) {
             const scale_content = Math.min(new_size.width / width, new_size.height / height);
 
-            page.scale(scale_content * 1.45, scale_content * 1.45);
+            page.scale(scale_content * 1.43, scale_content * 1.43);
         } else {
             page.setSize(new_size.width, new_size.height);
             page.scale(new_size.width / width, new_size.height / height);
         }
     });
-    // return pdfDoc.save();
 };
 
 export const drawTextOnPages = (page: PDFPage, text: string, font: PDFFont) => {

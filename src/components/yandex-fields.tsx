@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Progress, Tooltip, Whisper } from 'rsuite';
+import { Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import {
     wrapText,
@@ -15,99 +15,55 @@ import {
     drawTextOnPagesYandex,
     dateTimeForFileName,
     compareAndDelete,
+    getSortedProductList,
+    prepareIndices,
+    sortDuplicatedProducts,
+    processPage,
+    getPagesToProcess,
+    processPageSlicer,
 } from '../utils';
 import '../App';
 import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
 
-import { ProductList, ExcelRow, YandexProductList } from '../types/common';
+import { ExcelRow, YandexProductList } from '../types/common';
 
 export const YandexFields = () => {
     const [yandexProductList, setYandexProductList] = useState<YandexProductList>([]);
-    const [getOzonPdfData, setGetOzonPdfData] = useState(false);
+    // const [getOzonPdfData, setGetOzonPdfData] = useState(false);
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [fileLink, setFileLink] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
-    const [percentOzon, setPercentOzon] = useState(0);
     const [objectUrlOzon, setObjectUrl] = useState('');
-    const status = percentOzon === 100 ? 'success' : 'active';
-    const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
+    
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
-    });
-
-    const pageIds: string[] = [];
+    }, []);
 
     const MAX_CONCURRENT_PAGES = 4;
     const START_PAGE = 1;
+    const pageIds: string[] = [];
 
-
-    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
+    const processYandexPdfPages = async (file: ArrayBuffer, endPage: number) => {
         const doc = await pdfjs.getDocument(file).promise;
 
-        const pagesToProcess = Array.from({ length: endPage - START_PAGE + 1 }, (_, i) => START_PAGE + i);
+        const pagesToProcess = getPagesToProcess(START_PAGE, endPage);
 
-        async function processPage(pageNumber: number) {
-            const page = await doc.getPage(pageNumber);
-            const item = await page.getTextContent();
-            //@ts-ignore
-            const oneArgs = { id: item.items[0].str };
-            //@ts-ignore
-            pageIds.push(oneArgs);
+        const getPageContent = async (pageNumber: number) => {
+            await processPage(doc, pageIds, pageNumber);
+        };
 
-            page.cleanup();
-        }
+        const promises: any[] = [];
 
-        const promises = [];
-        for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
-            const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
-            const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
-            promises.push(...pagePromises);
-            await Promise.all(pagePromises);
-
-            const getPercent = 100 / (endPage - START_PAGE + 1);
-            setPercentOzon(getPercent * (i + MAX_CONCURRENT_PAGES));
-        }
+        await processPageSlicer(pagesToProcess, MAX_CONCURRENT_PAGES, promises, getPageContent);
 
         doc.cleanup();
 
         await Promise.all(promises);
-    };
-
-    const getSortedArray = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.label])
-                    acc[item.label] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
-    };
-
-    const sortDuplicatedOrders = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.id])
-                    acc[item.id] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
     };
 
     const generateFinalPDF = async (
@@ -118,22 +74,12 @@ export const YandexFields = () => {
     ) => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
-        const pageCount = pdfDocument.getPages();
-        const countPage = pdfDocument.getPageCount()
+        const pdfPages = pdfDocument.getPages();
+        const pageCount = pdfDocument.getPageCount();
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
-        const prepareIndices = () => {
-            const allPages = [];
-
-            for (let i = 0; i < pageCount.length; i++) {
-                allPages.push(i);
-            }
-
-            return allPages;
-        };
-
-        await processPdfPages(pdfBuffer, countPage);
+        await processYandexPdfPages(pdfBuffer, pageCount);
 
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
         const comparedArray = compareAndDelete(uniqueOrders, pageIds);
@@ -142,11 +88,11 @@ export const YandexFields = () => {
         const simpleOrders = comparedArray.filter(item => item.count === 1);
         const difficultOrders = comparedArray.filter(item => item.count !== 1);
 
-        const sortedSimpleOrders = getSortedArray(simpleOrders);
-        const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
+        const sortedSimpleOrders = getSortedProductList(simpleOrders);
+        const sortedDuplicatedOrders = sortDuplicatedProducts(duplicatedOrders);
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
+        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices(pdfPages));
 
         sortedArr.forEach(async group => {
             finalPdf.addPage();
@@ -158,7 +104,7 @@ export const YandexFields = () => {
             const text = wrapText(generateYandexText(group), 200, font, 18).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);
-            for (let i = 0; i < pageCount.length; i++) {
+            for (let i = 0; i < pdfPages.length; i++) {
                 // @ts-ignore
                 if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                     pagesForGroup.push(copiedPages[i]);
@@ -251,7 +197,7 @@ export const YandexFields = () => {
             }
         };
 
-        setGetOzonPdfData(true);
+        // setGetOzonPdfData(true);
         setDisableOzon(true);
         setLoading(false);
     };
@@ -331,22 +277,15 @@ export const YandexFields = () => {
                     </a>
                 </div>
             )}
-            {getOzonPdfData && (
+            {/* {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
                             {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
                         </label>
-                        <Progress.Line
-                            percent={+percentOzon.toFixed(2)}
-                            id="progress"
-                            className="progress-line"
-                            strokeColor={color}
-                            status={status}
-                        />
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

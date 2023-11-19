@@ -11,6 +11,8 @@ import {
     drawTextOnPagesOzon,
     generateOzonText,
     getDuplicatesOrUniques,
+    getSortedProductList,
+    sortDuplicatedProducts,
 } from '../../utils';
 import '../../App';
 import 'rsuite/dist/rsuite.min.css';
@@ -45,38 +47,6 @@ export const OzonFields = (): ReactElement => {
         const oneArgs = { id: item.items[4].str };
         //@ts-ignore'
         pageIds.push(oneArgs);
-    };
-
-    const getSortedArray = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.label])
-                    acc[item.label] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
-    };
-
-    const sortDuplicatedOrders = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.id])
-                    acc[item.id] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
     };
 
     const generateFinalPDF = async (
@@ -114,8 +84,8 @@ export const OzonFields = (): ReactElement => {
         const simpleOrders = uniqueOrders.filter(item => item.count === 1);
         const difficultOrders = uniqueOrders.filter(item => item.count !== 1);
 
-        const sortedSimpleOrders = getSortedArray(simpleOrders);
-        const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
+        const sortedSimpleOrders = getSortedProductList(simpleOrders);
+        const sortedDuplicatedOrders = sortDuplicatedProducts(duplicatedOrders);
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
 

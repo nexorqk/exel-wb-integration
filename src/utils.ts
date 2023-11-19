@@ -2,6 +2,7 @@ import { ProductList, ProductListItem } from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
 import { pdfjs, TextItem } from 'react-pdf';
+import { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api';
 
 export const setWorkerSrc = (data: any) => {
     return (data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`);
@@ -248,4 +249,74 @@ export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
     xlsIds.push(...newArray);
 
     return newArray;
+};
+
+export const getSortedProductList = (productList: ProductList) => {
+    const result = Object.values(
+        productList.reduce((acc: any, item: any) => {
+            if (!acc[item.label])
+                acc[item.label] = {
+                    ...item,
+                };
+            //@ts-ignore
+            else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
+            return acc;
+        }, {}),
+    );
+
+    return result;
+};
+
+export const prepareIndices = (pdfPages: PDFPage[]) => {
+    const allPages = [];
+
+    for (let i = 0; i < pdfPages.length; i++) {
+        allPages.push(i);
+    }
+
+    return allPages;
+};
+
+export const sortDuplicatedProducts = (productList: ProductList) => {
+    const result = Object.values(
+        productList.reduce((acc: any, item: any) => {
+            if (!acc[item.id])
+                acc[item.id] = {
+                    ...item,
+                };
+            //@ts-ignore
+            else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
+            return acc;
+        }, {}),
+    );
+
+    return result;
+};
+
+export const processPage = async (doc: any, pageIds: any, pageNumber: number) => {
+    const page = await doc.getPage(pageNumber);
+    const item = await page.getTextContent();
+    //@ts-ignore
+    const oneArgs = { id: item.items[0].str };
+    //@ts-ignore
+    pageIds.push(oneArgs);
+
+    page.cleanup();
+};
+
+export const getPagesToProcess = (startPage: number, endPage: number) =>
+    Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i);
+
+export const processPageSlicer = async (
+    pages: number[],
+    maxConcurentPages: number,
+    promises: Promise<any>[],
+    proccesPageFn: (pageNumber: number) => Promise<void>,
+) => {
+    for (let i = 0; i < pages.length; i += maxConcurentPages) {
+        const chunk = pages.slice(i, i + maxConcurentPages);
+        const pagePromises = chunk.map(pageNumber => proccesPageFn(pageNumber));
+        promises.push(...pagePromises);
+        await Promise.all(pagePromises);
+    }
 };

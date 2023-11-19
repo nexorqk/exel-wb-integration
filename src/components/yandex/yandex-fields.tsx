@@ -2,7 +2,6 @@ import React, { ReactElement, useEffect, useReducer, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import {
     wrapText,
@@ -17,12 +16,14 @@ import {
     compareAndDelete,
 } from '../utils';
 import '../App';
-import 'rsuite/dist/rsuite.min.css';
+import { Box, Button, Link, Typography } from '@mui/material';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
 
 import clsx from 'clsx';
 import { ActionType, initialState, yandexReducer } from './reducer';
 import { ExcelRow, ProductList, YandexProductListItem } from '../../types/common';
+import { ProductList, ExcelRow } from '../types/common';
+import LinearWithValueLabel, { LinearProgressWithLabel } from './Linear';
 
 export const YandexFields = (): ReactElement => {
     // const [yandexProductList, setYandexProductList] = useState<ProductList>([]);
@@ -36,7 +37,6 @@ export const YandexFields = (): ReactElement => {
     const [percentOzon, setPercentOzon] = useState(0);
     const [objectUrlOzon, setObjectUrl] = useState('');
     const status = percentOzon === 100 ? 'success' : 'active';
-    const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
 
     const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
@@ -44,11 +44,19 @@ export const YandexFields = (): ReactElement => {
         setWorkerSrc(pdfjs);
     });
 
+    // useEffect(() => {
+    //     const timer = setInterval(() => {
+    //         setPercentOzon(prevProgress => (prevProgress >= 100 ? 10 : prevProgress + 10));
+    //     }, 800);
+    //     return () => {
+    //         clearInterval(timer);
+    //     };
+    // }, []);
+
     const pageIds: string[] = [];
 
     const MAX_CONCURRENT_PAGES = 4;
     const START_PAGE = 1;
-
 
     const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
         const doc = await pdfjs.getDocument(file).promise;
@@ -123,7 +131,7 @@ export const YandexFields = (): ReactElement => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
-        const countPage = pdfDocument.getPageCount()
+        const countPage = pdfDocument.getPageCount();
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
@@ -291,9 +299,11 @@ export const YandexFields = (): ReactElement => {
     };
 
     return (
-        <div>
-            <h2>Yandex Stickers:</h2>
-            <div className="row">
+        <Box sx={{ margin: '30px 0' }}>
+            <Typography variant="h4" mb={2}>
+                Yandex Stickers:
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
                 <label htmlFor="XLSX" className="btn">
                     Выбрать Excel файл
                     <input
@@ -306,31 +316,31 @@ export const YandexFields = (): ReactElement => {
                         disabled={loading}
                     />
                 </label>
-
-                <Whisper
+                <label htmlFor="PDF_Yandex" className="btn">
+                    Выбрать PDF файл
+                    <input
+                        type="file"
+                        onChange={handlePDFSelected}
+                        placeholder="Choose 11"
+                        accept="application/pdf"
+                        className="PDF-file"
+                        id="PDF_Yandex"
+                        name="PDF_Ozon_file"
+                        disabled={disableOzon || loading}
+                    />
+                </label>
+                {/* <Whisper
                     placement="top"
                     controlId={`control-id-hover`}
                     trigger="hover"
                     speaker={disableOzon ? <Tooltip>Сначала загрузите Excel файл!</Tooltip> : <div></div>}
                 >
-                    <label htmlFor="PDF_Yandex" className="btn">
-                        Выбрать PDF файл
-                        <input
-                            type="file"
-                            onChange={handlePDFSelected}
-                            placeholder="Choose 11"
-                            accept="application/pdf"
-                            className="PDF-file"
-                            id="PDF_Yandex"
-                            name="PDF_Ozon_file"
-                            disabled={disableOzon || loading}
-                        />
-                    </label>
-                </Whisper>
-                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
+
+                </Whisper> */}
+                <Button variant="contained" className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
-                </button>
-            </div>
+                </Button>
+            </Box>
             {!disableOzon && (
                 <div className="excel-downloaded">
                     <div className="excel-downloaded-bar">
@@ -341,28 +351,24 @@ export const YandexFields = (): ReactElement => {
 
             {fileLink.length !== 0 && (
                 <div>
-                    <span className="reviewLink_label">Предпросмотр: </span>
-                    <a className="reviewLink" onClick={openFile} target="_blank" rel="noreferrer">
+                    <Typography fontWeight="bold">Предпросмотр: </Typography>
+                    <Link onClick={openFile} target="_blank" rel="noreferrer">
                         Yandex Sample PDF
-                    </a>
+                    </Link>
                 </div>
             )}
+            <Typography variant="h1">{status}</Typography>
+
             {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
                             {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
                         </label>
-                        <Progress.Line
-                            percent={+percentOzon.toFixed(2)}
-                            id="progress"
-                            className="progress-line"
-                            strokeColor={color}
-                            status={status}
-                        />
+                        <LinearProgressWithLabel value={percentOzon} />
                     </div>
                 </div>
             )}
-        </div>
+        </Box>
     );
 };

@@ -1,17 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText, generateWBText } from './utils';
 import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
-import './App.css';
-import 'rsuite/dist/rsuite.min.css';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
-import clsx from 'clsx';
-import { YandexFields } from './components/yandex/yandex-fields';
+import { YandexFields } from './components/yandex-fields';
+import { Box, Button, Container, CssBaseline, Fade, Grid, Paper, Popper, Stack, Typography } from '@mui/material';
+import PopupState, { bindPopper, bindToggle } from 'material-ui-popup-state';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -267,21 +267,37 @@ export const App = (): ReactElement => {
     };
 
     return (
-        <div className="main">
-            <div className="top-article">
-                <h1 className="logo-title">WB OZON Stickers</h1>
-                <aside className="rules-article">
-                    <ul style={{ listStyle: 'decimal' }}>
-                        <li>Загрузите Excel-файл</li>
-                        <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
-                        <li>Дождитесь загрузки</li>
-                        <li>Нажмите на кнопку Скачать</li>
-                    </ul>
-                </aside>
-            </div>
-            <div className="section">
-                <h2>Wildberries Stickers:</h2>
-                <div className="row">
+        <Container component="main">
+            <CssBaseline />
+            <Typography variant="h3" className="logo-title">
+                WB OZON Stickers
+            </Typography>
+            <PopupState variant="popper" popupId="demo-popup-popper">
+                {popupState => (
+                    <div>
+                        <Button variant="contained" {...bindToggle(popupState)}>
+                            Инструкция
+                        </Button>
+                        <Popper {...bindPopper(popupState)} transition>
+                            {({ TransitionProps }) => (
+                                <Fade {...TransitionProps} timeout={350}>
+                                    <Paper sx={{ color: '#dc143c', fontSize: 20, p: 4 }}>
+                                        <ul>
+                                            <li>Загрузите Excel-файл</li>
+                                            <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
+                                            <li>Дождитесь загрузки</li>
+                                            <li>Нажмите на кнопку Скачать</li>
+                                        </ul>
+                                    </Paper>
+                                </Fade>
+                            )}
+                        </Popper>
+                    </div>
+                )}
+            </PopupState>
+            <Stack>
+                <Typography variant="h4">Wildberries Stickers:</Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
                     <label htmlFor="XLSX-yandex" className="btn">
                         Выбрать Excel файл
                         <input
@@ -294,32 +310,33 @@ export const App = (): ReactElement => {
                             disabled={loading}
                         />
                     </label>
-                    <Whisper
+                    <label htmlFor="PDF" className="btn" aria-disabled>
+                        Выбрать PDF файл
+                        <input
+                            multiple
+                            type="file"
+                            onChange={handlePDFSelected}
+                            placeholder="Choose 11"
+                            accept="application/pdf"
+                            className="PDF-file"
+                            id="PDF"
+                            name="PDF_file"
+                            disabled={disable || loading}
+                        />
+                    </label>
+                    {/* <Whisper
                         placement="top"
                         controlId={`control-id-hover`}
                         trigger="hover"
                         speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
                     >
-                        <label htmlFor="PDF" className="btn" aria-disabled>
-                            Выбрать PDF файл
-                            <input
-                                multiple
-                                type="file"
-                                onChange={handlePDFSelected}
-                                placeholder="Choose 11"
-                                accept="application/pdf"
-                                className="PDF-file"
-                                id="PDF"
-                                name="PDF_file"
-                                disabled={disable || loading}
-                            />
-                        </label>
-                    </Whisper>
+                        
+                    </Whisper> */}
 
-                    <button className="button" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                    <Button variant="contained" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
                         Скачать
-                    </button>
-                </div>
+                    </Button>
+                </Box>
 
                 {!disable && (
                     <div className="excel-downloaded">
@@ -328,7 +345,7 @@ export const App = (): ReactElement => {
                         </div>
                     </div>
                 )}
-                {getPdfData && (
+                {/* {getPdfData && (
                     <div className="progress">
                         <div className="progress-bar">
                             <label className="progress-label" htmlFor="progress">
@@ -343,10 +360,10 @@ export const App = (): ReactElement => {
                             />
                         </div>
                     </div>
-                )}
+                )} */}
                 <OzonFields />
                 <YandexFields />
-            </div>
-        </div>
+            </Stack>
+        </Container>
     );
 };

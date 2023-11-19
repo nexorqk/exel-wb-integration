@@ -1,7 +1,7 @@
-import { ProductList, ProductListItem } from './types/common';
+import { ProductList, ProductListItem, TextContentItem } from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { pageSize } from './constants';
-import { pdfjs, TextItem } from 'react-pdf';
+import { pdfjs } from 'react-pdf';
 
 export const setWorkerSrc = (data: any) => {
     return (data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`);
@@ -186,9 +186,9 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
     const doc = await pdfjs.getDocument(file).promise;
     const page = await doc.getPage(number);
     const test = await page.getTextContent();
-    const items = test.items as TextItem[];
-    const item: TextItem | undefined = items.find(item => item.str);
-    const itemLast: TextItem | undefined = items.find(item => item.str.length === 4);
+    const items: TextContentItem[] = test.items;
+    const item: TextContentItem | undefined = items.find(item => item.str);
+    const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
 
     return `${item?.str}${itemLast?.str}`;
 };

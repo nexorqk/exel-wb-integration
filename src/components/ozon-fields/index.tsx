@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
-import { Progress, Tooltip, Whisper } from 'rsuite';
 import { pdfjs } from 'react-pdf';
 import {
     wrapText,
@@ -13,10 +14,10 @@ import {
     getDuplicatesOrUniques,
 } from '../../utils';
 import '../../App';
-import 'rsuite/dist/rsuite.min.css';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
 import { ProductList, ExcelRow } from '../../types/common';
+import { Box, Button } from '@mui/material';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -240,7 +241,7 @@ export const OzonFields = (): ReactElement => {
     return (
         <div>
             <h2>Ozon Stickers:</h2>
-            <div className="row">
+            <Box sx={{ display: 'flex', gap: 2 }}>
                 <label htmlFor="XLSX_Ozon" className="btn">
                     Выбрать CSV файл
                 </label>
@@ -254,30 +255,32 @@ export const OzonFields = (): ReactElement => {
                     disabled={loading}
                 />
 
-                <Whisper
+                <label htmlFor="PDF_Ozon" className="btn">
+                    Выбрать PDF файл
+                    <input
+                        type="file"
+                        onChange={handlePDFSelected}
+                        placeholder="Choose 11"
+                        accept="application/pdf"
+                        className="PDF-file"
+                        id="PDF_Ozon"
+                        name="PDF_Ozon_file"
+                        disabled={disableOzon || loading}
+                    />
+                </label>
+
+                {/* <Whisper
                     placement="top"
                     controlId={`control-id-hover`}
                     trigger="hover"
                     speaker={disableOzon ? <Tooltip>Сначала загрузите CSV файл!</Tooltip> : <div></div>}
                 >
-                    <label htmlFor="PDF_Ozon" className="btn">
-                        Выбрать PDF файл
-                        <input
-                            type="file"
-                            onChange={handlePDFSelected}
-                            placeholder="Choose 11"
-                            accept="application/pdf"
-                            className="PDF-file"
-                            id="PDF_Ozon"
-                            name="PDF_Ozon_file"
-                            disabled={disableOzon || loading}
-                        />
-                    </label>
-                </Whisper>
-                <button className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
+                    
+                </Whisper> */}
+                <Button variant="contained" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
-                </button>
-            </div>
+                </Button>
+            </Box>
             {!disableOzon && (
                 <div className="excel-downloaded">
                     <div className="excel-downloaded-bar">
@@ -285,7 +288,7 @@ export const OzonFields = (): ReactElement => {
                     </div>
                 </div>
             )}
-            {getOzonPdfData && (
+            {/* {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
@@ -300,7 +303,7 @@ export const OzonFields = (): ReactElement => {
                         />
                     </div>
                 </div>
-            )}
+            )} */}
         </div>
     );
 };

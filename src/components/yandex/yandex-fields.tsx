@@ -46,16 +46,42 @@ export const YandexFields = (): ReactElement => {
 
     const pageIds: string[] = [];
 
-    const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
-        const doc = await pdfjs.getDocument(file).promise;
-        const page = await doc.getPage(number);
+    const MAX_CONCURRENT_PAGES = 4;
+    const START_PAGE = 1;
 
-        const item = await page.getTextContent();
-        //@ts-ignore
-        const oneArgs = { id: item.items[0].str };
-        //@ts-ignore
-        pageIds.push(oneArgs);
+
+    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
+        const doc = await pdfjs.getDocument(file).promise;
+
+        const pagesToProcess = Array.from({ length: endPage - START_PAGE + 1 }, (_, i) => START_PAGE + i);
+
+        async function processPage(pageNumber: number) {
+            const page = await doc.getPage(pageNumber);
+            const item = await page.getTextContent();
+            //@ts-ignore
+            const oneArgs = { id: item.items[0].str };
+            //@ts-ignore
+            pageIds.push(oneArgs);
+
+            page.cleanup();
+        }
+
+        const promises = [];
+        for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
+            const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
+            const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
+            promises.push(...pagePromises);
+            await Promise.all(pagePromises);
+
+            const getPercent = 100 / (endPage - START_PAGE + 1);
+            setPercentOzon(getPercent * (i + MAX_CONCURRENT_PAGES));
+        }
+
+        doc.cleanup();
+
+        await Promise.all(promises);
     };
+
     const getSortedArray = (productList: ProductList) => {
         const result = Object.values(
             productList.reduce((acc: any, item: any) => {
@@ -97,6 +123,7 @@ export const YandexFields = (): ReactElement => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
+        const countPage = pdfDocument.getPageCount()
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
@@ -110,16 +137,11 @@ export const YandexFields = (): ReactElement => {
             return allPages;
         };
 
-        for (let index = 1; index <= pageCount.length; index++) {
-            const id = await getOzonPDFText(pdfBuffer, index);
-            if (id as any) pageIds.push(id as any);
-            const getPercent = 100 / pageCount.length;
-            setPercentOzon(getPercent * index);
-        }
+        await processPdfPages(pdfBuffer, countPage);
 
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
-        const comparedArray = compareAndDelete(uniqueOrders, pageIds)
-        
+        const comparedArray = compareAndDelete(uniqueOrders, pageIds);
+
         const duplicatedOrders = getDuplicatesOrUniques(yandexProductList, true);
         const simpleOrders = comparedArray.filter(item => item.count === 1);
         const difficultOrders = comparedArray.filter(item => item.count !== 1);
@@ -319,7 +341,7 @@ export const YandexFields = (): ReactElement => {
 
             {fileLink.length !== 0 && (
                 <div>
-                    <span className='reviewLink_label'>Предпросмотр: </span>
+                    <span className="reviewLink_label">Предпросмотр: </span>
                     <a className="reviewLink" onClick={openFile} target="_blank" rel="noreferrer">
                         Yandex Sample PDF
                     </a>

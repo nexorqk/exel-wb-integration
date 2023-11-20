@@ -18,11 +18,10 @@ import {
     compareAndDelete,
 } from '../utils';
 import '../App';
-import { Box, Button, Link, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
 
 import { ProductList, ExcelRow, YandexProductList } from '../types/common';
-import LinearWithValueLabel, { LinearProgressWithLabel } from './Linear';
 
 export const YandexFields = () => {
     const [yandexProductList, setYandexProductList] = useState<YandexProductList>([]);
@@ -40,15 +39,6 @@ export const YandexFields = () => {
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
-
-    // useEffect(() => {
-    //     const timer = setInterval(() => {
-    //         setPercentOzon(prevProgress => (prevProgress >= 100 ? 10 : prevProgress + 10));
-    //     }, 800);
-    //     return () => {
-    //         clearInterval(timer);
-    //     };
-    // }, []);
 
     const pageIds: string[] = [];
 
@@ -295,43 +285,30 @@ export const YandexFields = () => {
                         type="file"
                         onChange={handleXLSXSelected}
                         accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        className="XLSX-file"
                         id="XLSX"
-                        name="XLSX_file"
                         disabled={loading}
                     />
                 </label>
-                <label htmlFor="PDF_Yandex" className="btn">
-                    Выбрать PDF файл
-                    <input
-                        type="file"
-                        onChange={handlePDFSelected}
-                        placeholder="Choose 11"
-                        accept="application/pdf"
-                        className="PDF-file"
-                        id="PDF_Yandex"
-                        name="PDF_Ozon_file"
-                        disabled={disableOzon || loading}
-                    />
-                </label>
-                {/* <Whisper
-                    placement="top"
-                    controlId={`control-id-hover`}
-                    trigger="hover"
-                    speaker={disableOzon ? <Tooltip>Сначала загрузите Excel файл!</Tooltip> : <div></div>}
-                >
-
-                </Whisper> */}
+                <Tooltip title={disableOzon ? <h2>Сначала загрузите Excel файл!</h2> : ''}>
+                    <label htmlFor="PDF_Yandex" className="btn">
+                        Выбрать PDF файл
+                        <input
+                            type="file"
+                            onChange={handlePDFSelected}
+                            accept="application/pdf"
+                            id="PDF_Yandex"
+                            disabled={disableOzon || loading}
+                        />
+                    </label>
+                </Tooltip>
                 <Button variant="contained" className="button" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
                 </Button>
             </Box>
             {!disableOzon && (
-                <div className="excel-downloaded">
-                    <div className="excel-downloaded-bar">
-                        <p className="excel-downloaded-label">Excel файл был загружен!</p>
-                    </div>
-                </div>
+                <Typography variant="h4" m={2}>
+                    Excel файл был загружен!
+                </Typography>
             )}
 
             {fileLink.length !== 0 && (
@@ -342,15 +319,13 @@ export const YandexFields = () => {
                     </Link>
                 </div>
             )}
-            <Typography variant="h1">{status}</Typography>
-
             {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
                             {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
                         </label>
-                        <LinearProgressWithLabel value={percentOzon} />
+                        <LinearProgress variant="determinate" value={percentOzon} />
                     </div>
                 </div>
             )}

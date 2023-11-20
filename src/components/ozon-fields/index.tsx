@@ -17,7 +17,7 @@ import '../../App';
 import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
 
 import { ProductList, ExcelRow } from '../../types/common';
-import { Box, Button } from '@mui/material';
+import { Box, Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -29,7 +29,6 @@ export const OzonFields = (): ReactElement => {
     const [objectUrlOzon, setObjectUrl] = useState('');
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const status = percentOzon === 100 ? 'success' : 'active';
-    const color = percentOzon === 100 ? '#8a2be2' : '#02749C';
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -239,44 +238,25 @@ export const OzonFields = (): ReactElement => {
     };
 
     return (
-        <div>
-            <h2>Ozon Stickers:</h2>
+        <Stack spacing={2}>
+            <Typography variant="h4">Ozon Stickers:</Typography>
             <Box sx={{ display: 'flex', gap: 2 }}>
                 <label htmlFor="XLSX_Ozon" className="btn">
                     Выбрать CSV файл
                 </label>
-                <input
-                    type="file"
-                    onChange={handleXLSXSelected}
-                    accept=".csv"
-                    className="XLSX-file"
-                    id="XLSX_Ozon"
-                    name="XLSX_Ozon_file"
-                    disabled={loading}
-                />
-
-                <label htmlFor="PDF_Ozon" className="btn">
-                    Выбрать PDF файл
-                    <input
-                        type="file"
-                        onChange={handlePDFSelected}
-                        placeholder="Choose 11"
-                        accept="application/pdf"
-                        className="PDF-file"
-                        id="PDF_Ozon"
-                        name="PDF_Ozon_file"
-                        disabled={disableOzon || loading}
-                    />
-                </label>
-
-                {/* <Whisper
-                    placement="top"
-                    controlId={`control-id-hover`}
-                    trigger="hover"
-                    speaker={disableOzon ? <Tooltip>Сначала загрузите CSV файл!</Tooltip> : <div></div>}
-                >
-                    
-                </Whisper> */}
+                <input type="file" onChange={handleXLSXSelected} accept=".csv" id="XLSX_Ozon" disabled={loading} />
+                <Tooltip title={disableOzon ? <h2>Сначала загрузите CSV файл!</h2> : ''}>
+                    <label htmlFor="PDF_Ozon" className="btn">
+                        Выбрать PDF файл
+                        <input
+                            type="file"
+                            onChange={handlePDFSelected}
+                            accept="application/pdf"
+                            id="PDF_Ozon"
+                            disabled={disableOzon || loading}
+                        />
+                    </label>
+                </Tooltip>
                 <Button variant="contained" disabled={!finalPDFOzon} type="button" onClick={onClick}>
                     Скачать
                 </Button>
@@ -288,22 +268,16 @@ export const OzonFields = (): ReactElement => {
                     </div>
                 </div>
             )}
-            {/* {getOzonPdfData && (
+            {getOzonPdfData && (
                 <div className="progress">
                     <div className="progress-bar">
                         <label className="progress-label" htmlFor="progress">
                             {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
                         </label>
-                        <Progress.Line
-                            percent={+percentOzon.toFixed(2)}
-                            id="progress"
-                            className="progress-line"
-                            strokeColor={color}
-                            status={status}
-                        />
+                        <LinearProgress variant="determinate" value={percentOzon} />
                     </div>
                 </div>
-            )} */}
-        </div>
+            )}
+        </Stack>
     );
 };

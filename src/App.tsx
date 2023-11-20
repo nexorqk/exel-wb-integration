@@ -10,7 +10,19 @@ import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
 import { YandexFields } from './components/yandex-fields';
-import { Box, Button, Container, CssBaseline, Fade, Grid, Paper, Popper, Stack, Typography } from '@mui/material';
+import {
+    Box,
+    Button,
+    Container,
+    CssBaseline,
+    Fade,
+    LinearProgress,
+    Paper,
+    Popper,
+    Stack,
+    Tooltip,
+    Typography,
+} from '@mui/material';
 import PopupState, { bindPopper, bindToggle } from 'material-ui-popup-state';
 
 export const App = (): ReactElement => {
@@ -24,8 +36,6 @@ export const App = (): ReactElement => {
     const [objectUrl, setObjectUrl] = useState('');
     const [finalPDFList, setFinalPDFList] = useState<PDFDocument[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-    const status = percent === 100 ? 'success' : 'active';
-    const color = percent === 100 ? '#8a2be2' : '#02749C';
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -269,101 +279,96 @@ export const App = (): ReactElement => {
     return (
         <Container component="main">
             <CssBaseline />
-            <Typography variant="h3" className="logo-title">
-                WB OZON Stickers
-            </Typography>
-            <PopupState variant="popper" popupId="demo-popup-popper">
-                {popupState => (
-                    <div>
-                        <Button variant="contained" {...bindToggle(popupState)}>
-                            Инструкция
-                        </Button>
-                        <Popper {...bindPopper(popupState)} transition>
-                            {({ TransitionProps }) => (
-                                <Fade {...TransitionProps} timeout={350}>
-                                    <Paper sx={{ color: '#dc143c', fontSize: 20, p: 4 }}>
-                                        <ul>
-                                            <li>Загрузите Excel-файл</li>
-                                            <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
-                                            <li>Дождитесь загрузки</li>
-                                            <li>Нажмите на кнопку Скачать</li>
-                                        </ul>
-                                    </Paper>
-                                </Fade>
-                            )}
-                        </Popper>
-                    </div>
-                )}
-            </PopupState>
-            <Stack>
-                <Typography variant="h4">Wildberries Stickers:</Typography>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <label htmlFor="XLSX-yandex" className="btn">
-                        Выбрать Excel файл
-                        <input
-                            type="file"
-                            onChange={handleXLSXSelected}
-                            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                            className="XLSX-file"
-                            id="XLSX-yandex"
-                            name="XLSX_file"
-                            disabled={loading}
-                        />
-                    </label>
-                    <label htmlFor="PDF" className="btn" aria-disabled>
-                        Выбрать PDF файл
-                        <input
-                            multiple
-                            type="file"
-                            onChange={handlePDFSelected}
-                            placeholder="Choose 11"
-                            accept="application/pdf"
-                            className="PDF-file"
-                            id="PDF"
-                            name="PDF_file"
-                            disabled={disable || loading}
-                        />
-                    </label>
-                    {/* <Whisper
-                        placement="top"
-                        controlId={`control-id-hover`}
-                        trigger="hover"
-                        speaker={disable ? <Tooltip>Сначала загрузите EXCEL файл!</Tooltip> : <div></div>}
-                    >
-                        
-                    </Whisper> */}
-
-                    <Button variant="contained" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
-                        Скачать
-                    </Button>
-                </Box>
-
-                {!disable && (
-                    <div className="excel-downloaded">
-                        <div className="excel-downloaded-bar">
-                            <p className="excel-downloaded-label">Excel файл был загружен!</p>
+            <Box maxWidth={700}>
+                <Typography
+                    className="animate-charcter"
+                    variant="h1"
+                    sx={{
+                        fontWeight: 700,
+                        fontSize: '3.5rem',
+                        pt: 2,
+                        mb: 3,
+                    }}
+                >
+                    WB OZON Stickers
+                </Typography>
+                <PopupState variant="popper" popupId="demo-popup-popper">
+                    {popupState => (
+                        <div>
+                            <Button variant="contained" sx={{ mb: 2 }} {...bindToggle(popupState)}>
+                                Инструкция
+                            </Button>
+                            <Popper {...bindPopper(popupState)} transition>
+                                {({ TransitionProps }) => (
+                                    <Fade {...TransitionProps} timeout={350}>
+                                        <Paper sx={{ color: '#dc143c', fontSize: 20, p: 4 }}>
+                                            <ul style={{ listStyle: 'decimal' }}>
+                                                <li>Загрузите Excel-файл</li>
+                                                <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
+                                                <li>Дождитесь загрузки</li>
+                                                <li>Нажмите на кнопку Скачать</li>
+                                            </ul>
+                                        </Paper>
+                                    </Fade>
+                                )}
+                            </Popper>
                         </div>
-                    </div>
-                )}
-                {/* {getPdfData && (
-                    <div className="progress">
-                        <div className="progress-bar">
-                            <label className="progress-label" htmlFor="progress">
-                                {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
+                    )}
+                </PopupState>
+                <Stack spacing={3}>
+                    <Stack spacing={2}>
+                        <Typography variant="h4">Wildberries Stickers:</Typography>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <label className="btn" htmlFor="XLSX-yandex">
+                                Выбрать Excel файл
+                                <input
+                                    type="file"
+                                    onChange={handleXLSXSelected}
+                                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    id="XLSX-yandex"
+                                    disabled={loading}
+                                />
                             </label>
-                            <Progress.Line
-                                percent={+percent.toFixed(2)}
-                                id="progress"
-                                className="progress-line"
-                                strokeColor={color}
-                                status={status}
-                            />
-                        </div>
-                    </div>
-                )} */}
-                <OzonFields />
-                <YandexFields />
-            </Stack>
+                            <Tooltip title={disable ? <h2>Сначала загрузите EXCEL файл!</h2> : ''}>
+                                <label className="btn" htmlFor="PDF" aria-disabled>
+                                    Выбрать PDF файл
+                                    <input
+                                        multiple
+                                        type="file"
+                                        onChange={handlePDFSelected}
+                                        accept="application/pdf"
+                                        id="PDF"
+                                        disabled={disable || loading}
+                                    />
+                                </label>
+                            </Tooltip>
+                            <Button variant="contained" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                                Скачать
+                            </Button>
+                        </Box>
+
+                        {!disable && (
+                            <div className="excel-downloaded">
+                                <div className="excel-downloaded-bar">
+                                    <p className="excel-downloaded-label">Excel файл был загружен!</p>
+                                </div>
+                            </div>
+                        )}
+                        {getPdfData && (
+                            <div className="progress">
+                                <div className="progress-bar">
+                                    <label className="progress-label" htmlFor="progress">
+                                        {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
+                                    </label>
+                                    <LinearProgress variant="determinate" value={percent} />
+                                </div>
+                            </div>
+                        )}
+                    </Stack>
+                    <OzonFields />
+                    <YandexFields />
+                </Stack>
+            </Box>
         </Container>
     );
 };

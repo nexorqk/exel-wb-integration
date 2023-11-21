@@ -39,7 +39,12 @@ export const generateWBText = (group: any) => {
     ${articleIndentions}`;
 };
 
-export const generateOzonText = (label: string | string[], count: number, id: string, article: string) => {
+export const generateOzonText = (
+    label: string | string[],
+    count: number,
+    id: string,
+    article: string,
+) => {
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
         article.substring(0, 10),
         article.substring(12, 24),
@@ -196,7 +201,9 @@ export const getPDFText = async (file: ArrayBuffer, number: number) => {
 export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =>
     arr.filter((item, index) => {
         arr.splice(index, 1);
-        const unique = duplicates ? arr.find(elem => elem.id === item.id) : !arr.find(elem => elem.id === item.id);
+        const unique = duplicates
+            ? arr.find(elem => elem.id === item.id)
+            : !arr.find(elem => elem.id === item.id);
         arr.splice(index, 0, item);
         return unique;
     });
@@ -248,4 +255,13 @@ export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
     xlsIds.push(...newArray);
 
     return newArray;
+};
+
+export const convertBytes = (bytes?: number) => {
+    const kilobytes = bytes! / 1024;
+    const megabytes = kilobytes / 1024;
+
+    return megabytes >= 1
+        ? Math.round(megabytes * 100) / 100 + ' MB'
+        : Math.round(kilobytes * 100) / 100 + ' KB';
 };

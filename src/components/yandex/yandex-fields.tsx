@@ -17,27 +17,16 @@ import {
     convertBytes,
 } from '../../utils';
 
-import { Box, Button, LinearProgress, Link, Tooltip, Typography, styled } from '@mui/material';
+import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../../constants';
 
 import { initialState, yandexReducer } from './reducer';
 import { ExcelRow, ProductList, ProductListItem } from '../../types/common';
 
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
-
-const VisuallyHiddenInput = styled('input')({
-    clip: 'rect(0 0 0 0)',
-    clipPath: 'inset(50%)',
-    height: 1,
-    overflow: 'hidden',
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    whiteSpace: 'nowrap',
-    width: 100,
-});
+import UploadButton from '../UploadButton';
+import UploadedFileStatus from '../UploadedFileStatus';
 
 const LinearIndeterminate = () => {
     return (
@@ -54,7 +43,7 @@ export const YandexFields = (): ReactElement => {
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [fileLink, setFileLink] = useState('');
 
-    const [loading, setLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
     const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
     const [disableYandex, setDisableYandex] = useState(true);
@@ -247,7 +236,7 @@ export const YandexFields = (): ReactElement => {
     };
 
     const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setLoading(true);
+        setIsLoading(true);
         const reader = new FileReader();
 
         if (e.target.files) {
@@ -279,7 +268,7 @@ export const YandexFields = (): ReactElement => {
             }
         };
 
-        setLoading(false);
+        setIsLoading(false);
     };
 
     const onClick = async () => {
@@ -309,46 +298,31 @@ export const YandexFields = (): ReactElement => {
                 <div className="left-block">
                     <div className="card-button-wrapper">
                         <div className="custom-xlsx-button">
-                            <Button
+                            <UploadButton
+                                onChange={handleXLSXSelected}
+                                disabled={isLoading}
                                 className="custom-upload-button"
-                                component="label"
-                                variant="contained"
-                                startIcon={<CloudUploadIcon />}
-                            >
-                                Выбрать Excel файл
-                                <VisuallyHiddenInput
-                                    type="file"
-                                    onChange={handleXLSXSelected}
-                                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                    id="XLSX"
-                                    disabled={loading}
-                                />
-                            </Button>
+                                accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                rootNode="label"
+                                id={'XLSX'}
+                            />
                         </div>
                         <div className="custom-pdf-button">
                             <Tooltip
                                 title={
-                                    disableYandex || loading ? 'Сначала выберите Excel файл' : ''
+                                    disableYandex || isLoading ? 'Сначала выберите Excel файл' : ''
                                 }
                                 arrow
                             >
-                                <span className='button-wrapper'>
-                                    <Button
+                                <span className="button-wrapper">
+                                    <UploadButton
+                                        onChange={handlePDFSelected}
+                                        disabledButton={disableYandex || isLoading}
                                         className="custom-upload-button"
-                                        component="label"
-                                        variant="contained"
-                                        startIcon={<CloudUploadIcon />}
-                                        disabled={disableYandex || loading}
-                                    >
-                                        Выбрать PDF файл
-                                        <VisuallyHiddenInput
-                                            type="file"
-                                            accept="application/pdf"
-                                            onChange={handlePDFSelected}
-                                            id="PDF_Yandex"
-                                            disabled={disableYandex || loading}
-                                        />
-                                    </Button>
+                                        accept="application/pdf"
+                                        rootNode="label"
+                                        id="PDF_Yandex"
+                                    />
                                 </span>
                             </Tooltip>
                         </div>
@@ -357,74 +331,32 @@ export const YandexFields = (): ReactElement => {
                 <div className="row">
                     <div className="right-block">
                         <div className="card-icon-wrapper">
-                            <div className="card-file-xlsx">
-                                <FontAwesomeIcon
-                                    style={{
-                                        width: 60,
-                                        height: 60,
-                                        color: isXLSXFileLoaded ? '#A3B763' : 'grey',
-                                    }}
-                                    icon={faFileExcel}
-                                />
-                                <div className="file-uploading-status">
-                                    {!isXLSXFileLoaded ? (
-                                        <>
-                                            <p className="status-text">Выберите файл</p>
-                                        </>
-                                    ) : disableYandex ? (
-                                        <>
-                                            <p className="status-text">В процессе</p>
-                                            <LinearIndeterminate />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className="status-text">Файл загружен</p>
-                                            <p className="file-name-text">
-                                                {downloadedXLSXFileData?.name}
-                                            </p>
-                                            <p className="file-name-text">
-                                                {`${convertBytes(
-                                                    downloadedXLSXFileData?.size,
-                                                )}, pdf`}
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="card-file-pdf">
-                                <FontAwesomeIcon
-                                    style={{
-                                        width: 60,
-                                        height: 60,
-                                        color: isPDFFileLoaded ? '#A3B763' : 'grey',
-                                    }}
-                                    icon={faFile}
-                                />
-                                <div className="file-uploading-status">
-                                    {!isPDFFileLoaded ? (
-                                        <>
-                                            <p className="status-text">Выберите файл</p>
-                                        </>
-                                    ) : !getYandexPdfData ? (
-                                        <>
-                                            <p className="status-text">В процессе</p>
-                                            <LinearIndeterminate />
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className="status-text">Файл загружен</p>
-                                            <p className="file-name-text">
-                                                {downloadedPDFFileData?.name}
-                                            </p>
-                                            <p className="file-name-text">
-                                                {`${convertBytes(
-                                                    downloadedPDFFileData?.size,
-                                                )}, pdf`}
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
+                            <UploadedFileStatus
+                                size={{
+                                    width: 60,
+                                    heigth: 60,
+                                }}
+                                className="card-file-xlsx"
+                                isFileLoaded={isXLSXFileLoaded}
+                                secondCondition={disableYandex}
+                                fileName={downloadedXLSXFileData?.name}
+                                fileSize={convertBytes(downloadedXLSXFileData?.size)}
+                                fileType={'xlsx'}
+                                fileIcon={faFileExcel}
+                            />
+                            <UploadedFileStatus
+                                size={{
+                                    width: 60,
+                                    heigth: 60,
+                                }}
+                                className="card-file-pdf"
+                                isFileLoaded={isPDFFileLoaded}
+                                secondCondition={!getYandexPdfData}
+                                fileName={downloadedPDFFileData?.name}
+                                fileSize={convertBytes(downloadedPDFFileData?.size)}
+                                fileType="pdf"
+                                fileIcon={faFile}
+                            />
                             {fileLink.length !== 0 && finalPDFYandex && (
                                 <div className="card-preview-file">
                                     <FontAwesomeIcon

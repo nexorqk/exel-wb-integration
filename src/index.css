@@ -86,23 +86,23 @@ a {
     flex-direction: row;
 }
 
+.status-text {
+    font-weight: 700;
+    font-size: 16px;
+    margin: 0;
+}
+
+.file-name-text {
+    margin: 0;
+    font-size: 12px;
+}
+
 .file-uploading-status {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     margin: 0;
     margin-left: 1rem;
-
-    .status-text {
-        font-weight: 700;
-        font-size: 16px;
-        margin: 0;
-    }
-
-    .file-name-text {
-        margin: 0;
-        font-size: 12px;
-    }
 }
 
 .generate-file-container {
@@ -124,8 +124,8 @@ a {
 
 .card-preview-file {
     display: flex;
+}
 
-    .card-preview-file_info {
-        margin-left: 1rem;
-    }
+.card-preview-file_info {
+    margin-left: 1rem;
 }

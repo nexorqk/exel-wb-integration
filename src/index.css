@@ -43,24 +43,30 @@ a {
 
 .card {
     display: flex;
-    justify-content: space-evenly;
 
-    .left-block,
-    .right-block {
-        width: 100%;
-        padding: 2rem 0;
+    .row {
+        display: flex;
+        flex-grow: 1;
+        justify-content: center;
     }
 }
 
 .custom-upload-button {
     height: 60px;
     width: 230px;
-    margin-bottom: 20px !important;
 }
 
 .card-button-wrapper {
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.custom-pdf-button {
+    .button-wrapper {
+        display: block;
+    }
 }
 
 .custom-download-button {
@@ -70,6 +76,7 @@ a {
 .card-icon-wrapper {
     display: flex;
     flex-direction: column;
+    padding: 0 2rem;
 }
 
 .card-file-xlsx,
@@ -80,6 +87,9 @@ a {
 }
 
 .file-uploading-status {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
     margin: 0;
     margin-left: 1rem;
 
@@ -95,7 +105,7 @@ a {
     }
 }
 
-.generate-file-container{
+.generate-file-container {
     padding: 0.375rem;
 }
 

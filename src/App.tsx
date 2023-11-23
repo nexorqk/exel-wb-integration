@@ -48,7 +48,6 @@ export const App = (): ReactElement => {
 
     useEffect(() => {
         if (finalPDF) {
-            //@ts-ignore
             setFinalPDFList(currentValue => {
                 return [...currentValue, finalPDF];
             });

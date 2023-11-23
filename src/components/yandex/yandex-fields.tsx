@@ -17,7 +17,7 @@ import {
     convertBytes,
 } from '../../utils';
 
-import { Box, Button, LinearProgress, Link, Typography, styled } from '@mui/material';
+import { Box, Button, LinearProgress, Link, Tooltip, Typography, styled } from '@mui/material';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../../constants';
 
 import { initialState, yandexReducer } from './reducer';
@@ -36,7 +36,7 @@ const VisuallyHiddenInput = styled('input')({
     bottom: 0,
     left: 0,
     whiteSpace: 'nowrap',
-    width: 1,
+    width: 100,
 });
 
 const LinearIndeterminate = () => {
@@ -163,7 +163,6 @@ export const YandexFields = (): ReactElement => {
         await processPdfPages(pdfBuffer, countPage);
         setGetYandexPdfData(true);
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
-        console.log('pageIds : >>', pageIds);
         const comparedArray = compareAndDelete(uniqueOrders, pageIds);
 
         const duplicatedOrders = getDuplicatesOrUniques(yandexProductList, true);
@@ -187,13 +186,10 @@ export const YandexFields = (): ReactElement => {
             const pagesForGroup: PDFPage[] = [];
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);
             for (let i = 0; i < pageCount.length; i++) {
-                // @ts-ignore
                 if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
-                    // @ts-ignore
                     for (let j = 0; j < pageIds[i].id.length; j++) {
-                        // @ts-ignore
                         if (group.id[j] === pageIds[i].id) {
                             pagesForGroup.push(copiedPages[i]);
                         }
@@ -244,12 +240,6 @@ export const YandexFields = (): ReactElement => {
                     count: Number(el['Количество']),
                 }));
 
-                // const getSortedArr: YandexProductListItem[] = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
-
-                // dispatch({
-                //     type: ActionType.ADD_YANDEX_PRODUCT,
-                //     payload: getArgs,
-                // });
                 setYandexProductList(getArgs);
                 setDisableYandex(false);
             }
@@ -336,116 +326,130 @@ export const YandexFields = (): ReactElement => {
                             </Button>
                         </div>
                         <div className="custom-pdf-button">
-                            <>
-                                <Button
-                                    className="custom-upload-button"
-                                    component="label"
-                                    variant="contained"
-                                    startIcon={<CloudUploadIcon />}
-                                >
-                                    Выбрать PDF файл
-                                    <VisuallyHiddenInput
-                                        type="file"
-                                        accept="application/pdf"
-                                        onChange={handlePDFSelected}
-                                        id="PDF_Yandex"
+                            <Tooltip
+                                title={
+                                    disableYandex || loading ? 'Сначала выберите Excel файл' : ''
+                                }
+                                arrow
+                            >
+                                <span className='button-wrapper'>
+                                    <Button
+                                        className="custom-upload-button"
+                                        component="label"
+                                        variant="contained"
+                                        startIcon={<CloudUploadIcon />}
                                         disabled={disableYandex || loading}
-                                    />
-                                </Button>
-                            </>
+                                    >
+                                        Выбрать PDF файл
+                                        <VisuallyHiddenInput
+                                            type="file"
+                                            accept="application/pdf"
+                                            onChange={handlePDFSelected}
+                                            id="PDF_Yandex"
+                                            disabled={disableYandex || loading}
+                                        />
+                                    </Button>
+                                </span>
+                            </Tooltip>
                         </div>
                     </div>
                 </div>
-                <div className="right-block">
-                    <div className="card-icon-wrapper">
-                        <div className="card-file-xlsx">
-                            <FontAwesomeIcon
-                                style={{
-                                    width: 60,
-                                    height: 60,
-                                    color: isXLSXFileLoaded ? '#A3B763' : 'grey',
-                                }}
-                                icon={faFileExcel}
-                            />
-                            <p className="file-uploading-status">
-                                {!isXLSXFileLoaded ? (
-                                    <>
-                                        <p className="status-text">Выберите файл</p>
-                                    </>
-                                ) : disableYandex ? (
-                                    <>
-                                        <p className="status-text">В процессе</p>
-                                        <LinearIndeterminate />
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="status-text">Файл загружен</p>
-                                        <p className="file-name-text">
-                                            {downloadedXLSXFileData?.name}
-                                        </p>
-                                        <p className="file-name-text">
-                                            {`${convertBytes(downloadedXLSXFileData?.size)}, pdf`}
-                                        </p>
-                                    </>
-                                )}
-                            </p>
-                        </div>
-                        <div className="card-file-pdf">
-                            <FontAwesomeIcon
-                                style={{
-                                    width: 60,
-                                    height: 60,
-                                    color: isPDFFileLoaded ? '#A3B763' : 'grey',
-                                }}
-                                icon={faFile}
-                            />
-                            <p className="file-uploading-status">
-                                {!isPDFFileLoaded ? (
-                                    <>
-                                        <p className="status-text">Выберите файл</p>
-                                    </>
-                                ) : !getYandexPdfData ? (
-                                    <>
-                                        <p className="status-text">В процессе</p>
-                                        <LinearIndeterminate />
-                                    </>
-                                ) : (
-                                    <>
-                                        <p className="status-text">Файл загружен</p>
-                                        <p className="file-name-text">
-                                            {downloadedPDFFileData?.name}
-                                        </p>
-                                        <p className="file-name-text">
-                                            {`${convertBytes(downloadedPDFFileData?.size)}, pdf`}
-                                        </p>
-                                    </>
-                                )}
-                            </p>
-                        </div>
-                        {fileLink.length !== 0 && finalPDFYandex && (
-                            <div className="card-preview-file">
+                <div className="row">
+                    <div className="right-block">
+                        <div className="card-icon-wrapper">
+                            <div className="card-file-xlsx">
                                 <FontAwesomeIcon
                                     style={{
                                         width: 60,
                                         height: 60,
-                                        color: '#A3B763',
+                                        color: isXLSXFileLoaded ? '#A3B763' : 'grey',
                                     }}
-                                    icon={faBoxOpen}
+                                    icon={faFileExcel}
                                 />
-                                <div className="card-preview-file_info">
-                                    <Typography fontWeight="bold">Предпросмотр: </Typography>
-                                    <Link onClick={openFile} target="_blank" rel="noreferrer">
-                                        Yandex Sample PDF
-                                    </Link>
+                                <div className="file-uploading-status">
+                                    {!isXLSXFileLoaded ? (
+                                        <>
+                                            <p className="status-text">Выберите файл</p>
+                                        </>
+                                    ) : disableYandex ? (
+                                        <>
+                                            <p className="status-text">В процессе</p>
+                                            <LinearIndeterminate />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="status-text">Файл загружен</p>
+                                            <p className="file-name-text">
+                                                {downloadedXLSXFileData?.name}
+                                            </p>
+                                            <p className="file-name-text">
+                                                {`${convertBytes(
+                                                    downloadedXLSXFileData?.size,
+                                                )}, pdf`}
+                                            </p>
+                                        </>
+                                    )}
                                 </div>
                             </div>
-                        )}
-                        {getYandexPdfData && !finalPDFYandex && (
-                            <div className="generate-file-container">
-                                <p className="generate-file-text">Генерируем PDF.....</p>
-                                <LinearIndeterminate />
+                            <div className="card-file-pdf">
+                                <FontAwesomeIcon
+                                    style={{
+                                        width: 60,
+                                        height: 60,
+                                        color: isPDFFileLoaded ? '#A3B763' : 'grey',
+                                    }}
+                                    icon={faFile}
+                                />
+                                <div className="file-uploading-status">
+                                    {!isPDFFileLoaded ? (
+                                        <>
+                                            <p className="status-text">Выберите файл</p>
+                                        </>
+                                    ) : !getYandexPdfData ? (
+                                        <>
+                                            <p className="status-text">В процессе</p>
+                                            <LinearIndeterminate />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="status-text">Файл загружен</p>
+                                            <p className="file-name-text">
+                                                {downloadedPDFFileData?.name}
+                                            </p>
+                                            <p className="file-name-text">
+                                                {`${convertBytes(
+                                                    downloadedPDFFileData?.size,
+                                                )}, pdf`}
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
                             </div>
-                        )}
+                            {fileLink.length !== 0 && finalPDFYandex && (
+                                <div className="card-preview-file">
+                                    <FontAwesomeIcon
+                                        style={{
+                                            width: 60,
+                                            height: 60,
+                                            color: '#A3B763',
+                                        }}
+                                        icon={faBoxOpen}
+                                    />
+                                    <div className="card-preview-file_info">
+                                        <Typography fontWeight="bold">Предпросмотр: </Typography>
+                                        <Link onClick={openFile} target="_blank" rel="noreferrer">
+                                            Yandex Sample PDF
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
+                            {getYandexPdfData && !finalPDFYandex && (
+                                <div className="generate-file-container">
+                                    <p className="generate-file-text">Генерируем PDF.....</p>
+                                    <LinearIndeterminate />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>

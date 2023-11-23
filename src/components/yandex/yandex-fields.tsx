@@ -17,7 +17,7 @@ import {
     convertBytes,
 } from '../utils';
 import '../App';
-import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
+import { Box, Button, LinearProgress, Link, Typography } from '@mui/material';
 import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
 
 import clsx from 'clsx';
@@ -37,11 +37,9 @@ export const YandexFields = (): ReactElement => {
     const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
     const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
-    const [percentOzon, setPercentOzon] = useState(0);
     const [objectUrlOzon, setObjectUrl] = useState('');
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
-    const status = percentOzon === 100 ? 'success' : 'active';
 
     const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
@@ -79,9 +77,6 @@ export const YandexFields = (): ReactElement => {
             const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
             promises.push(...pagePromises);
             await Promise.all(pagePromises);
-
-            const getPercent = 100 / (endPage - START_PAGE + 1);
-            setPercentOzon(getPercent * (i + MAX_CONCURRENT_PAGES));
         }
 
         doc.cleanup();
@@ -438,7 +433,7 @@ export const YandexFields = (): ReactElement => {
                             </div>
                         )}
                         {getOzonPdfData && !finalPDFOzon && (
-                            <div className='generate-file-container'>
+                            <div className="generate-file-container">
                                 <p className="generate-file-text">Генерируем PDF.....</p>
                                 <LinearIndeterminate />
                             </div>

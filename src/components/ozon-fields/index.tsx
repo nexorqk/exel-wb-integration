@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';

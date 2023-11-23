@@ -15,39 +15,60 @@ import {
     dateTimeForFileName,
     compareAndDelete,
     convertBytes,
-} from '../utils';
-import '../App';
-import { Box, Button, LinearProgress, Link, Typography } from '@mui/material';
-import { FONT_URL, Multiplier, pageSizeYandex } from '../constants';
+} from '../../utils';
 
-import clsx from 'clsx';
-import { ActionType, initialState, yandexReducer } from './reducer';
-import { ExcelRow, ProductList, YandexProductListItem } from '../../types/common';
-import { ProductList, ExcelRow } from '../types/common';
-import LinearWithValueLabel, { LinearProgressWithLabel } from './Linear';
+import { Box, Button, LinearProgress, Link, Typography, styled } from '@mui/material';
+import { FONT_URL, Multiplier, pageSizeYandex } from '../../constants';
+
+import { initialState, yandexReducer } from './reducer';
+import { ExcelRow, ProductList, ProductListItem } from '../../types/common';
+
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
+
+const LinearIndeterminate = () => {
+    return (
+        <Box sx={{ width: '100%' }}>
+            <LinearProgress />
+        </Box>
+    );
+};
 
 export const YandexFields = (): ReactElement => {
-    // const [yandexProductList, setYandexProductList] = useState<ProductList>([]);
-    // const [getYandexPdfData, setGetYandexPdfData] = useState(false);
-    const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
+    const [yandexProductList, setYandexProductList] = useState<ProductList>([]);
+    const [getYandexPdfData, setGetYandexPdfData] = useState(false);
+    const [finalPDFYandex, setFinalPDFYandex] = useState<PDFDocument>();
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [fileLink, setFileLink] = useState('');
 
     const [loading, setLoading] = useState(false);
     const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
     const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
-    const [disableOzon, setDisableOzon] = useState(true);
-    const [objectUrlOzon, setObjectUrl] = useState('');
+    const [disableYandex, setDisableYandex] = useState(true);
+    const [objectUrlYandex, setObjectUrl] = useState('');
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
 
-    const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
+    // const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
 
-    const pageIds: string[] = [];
+    const pageIds: { id: string }[] = [];
 
     const MAX_CONCURRENT_PAGES = 4;
     const START_PAGE = 1;
@@ -60,18 +81,16 @@ export const YandexFields = (): ReactElement => {
             (_, i) => START_PAGE + i,
         );
 
-        async function processPage(pageNumber: number) {
+        const processPage = async (pageNumber: number) => {
             const page = await doc.getPage(pageNumber);
             const item = await page.getTextContent();
-            //@ts-ignore
-            const oneArgs = { id: item.items[0].str };
-            //@ts-ignore
+            const oneArgs: { id: string } = { id: item.items[0].str };
             pageIds.push(oneArgs);
 
             page.cleanup();
-        }
+        };
 
-        const promises = [];
+        const promises: Promise<void>[] = [];
         for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
             const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
             const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
@@ -84,17 +103,19 @@ export const YandexFields = (): ReactElement => {
         await Promise.all(promises);
     };
 
-    const getSortedArray = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.label])
+    const getSortedArray = (productList: ProductList): ProductListItem[] => {
+        const result: ProductListItem[] = Object.values(
+            productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
+                if (!acc[item.label]) {
                     acc[item.label] = {
                         ...item,
                     };
-                //@ts-ignore
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
+                } else {
+                    //@ts-ignore
+                    acc[item.label].id = [...acc[item.label].id, item.id];
+                }
                 return acc;
-            }, {}),
+            }, {} as Record<string, ProductListItem>),
         );
 
         return result;
@@ -102,15 +123,15 @@ export const YandexFields = (): ReactElement => {
 
     const sortDuplicatedOrders = (productList: ProductList) => {
         const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
+            productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
                 if (!acc[item.id])
                     acc[item.id] = {
                         ...item,
                     };
                 //@ts-ignore
-                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
+                else acc[item.id].label = [...acc[item.id].label, item.label];
                 return acc;
-            }, {}),
+            }, {} as Record<string, ProductListItem>),
         );
 
         return result;
@@ -140,8 +161,9 @@ export const YandexFields = (): ReactElement => {
         };
 
         await processPdfPages(pdfBuffer, countPage);
-        setGetOzonPdfData(true);
+        setGetYandexPdfData(true);
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
+        console.log('pageIds : >>', pageIds);
         const comparedArray = compareAndDelete(uniqueOrders, pageIds);
 
         const duplicatedOrders = getDuplicatesOrUniques(yandexProductList, true);
@@ -222,18 +244,17 @@ export const YandexFields = (): ReactElement => {
                     count: Number(el['Количество']),
                 }));
 
-                const getSortedArr: YandexProductListItem[] = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                // const getSortedArr: YandexProductListItem[] = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
 
-                dispatch({
-                    type: ActionType.ADD_YANDEX_PRODUCT,
-                    payload: getSortedArr,
-                });
-                setDisableOzon(false);
+                // dispatch({
+                //     type: ActionType.ADD_YANDEX_PRODUCT,
+                //     payload: getArgs,
+                // });
+                setYandexProductList(getArgs);
+                setDisableYandex(false);
             }
         };
     };
-
-    console.log('yandexData', yandexData);
 
     const handlePDFSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         setLoading(true);
@@ -250,17 +271,17 @@ export const YandexFields = (): ReactElement => {
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
             const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-            const finalPDFOzon = await generateFinalPDF(
+            const finalPDFYandex = await generateFinalPDF(
                 pdfDoc,
                 reader.result as ArrayBuffer,
                 timesRomanFont,
-                Multiplier.OZON,
+                Multiplier.Yandex,
             );
-            const pdfBytes = await finalPDFOzon.save();
-            setFinalPDFOzon(finalPDFOzon);
+            const pdfBytes = await finalPDFYandex.save();
+            setFinalPDFYandex(finalPDFYandex);
             setPdfBytes(pdfBytes);
 
-            if (finalPDFOzon && pdfBytes) {
+            if (finalPDFYandex && pdfBytes) {
                 const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
                 setObjectUrl(URL.createObjectURL(pdfBlob));
                 const fileURL = window.URL.createObjectURL(pdfBlob);
@@ -268,14 +289,13 @@ export const YandexFields = (): ReactElement => {
             }
         };
 
-        setDisableOzon(true);
         setLoading(false);
     };
 
     const onClick = async () => {
-        if (finalPDFOzon && pdfBytes) {
-            if (objectUrlOzon) {
-                URL.revokeObjectURL(objectUrlOzon);
+        if (finalPDFYandex && pdfBytes) {
+            if (objectUrlYandex) {
+                URL.revokeObjectURL(objectUrlYandex);
             }
             const alink = document.createElement('a');
             alink.href = fileLink;
@@ -286,9 +306,7 @@ export const YandexFields = (): ReactElement => {
 
     const openFile = () => {
         if (pdfBytes) {
-            console.log('objectUrlOzon : >>', objectUrlOzon);
-
-            open(objectUrlOzon);
+            open(objectUrlYandex);
         }
     };
 
@@ -297,16 +315,6 @@ export const YandexFields = (): ReactElement => {
             <Typography variant="h4" mb={2}>
                 Yandex Stickers:
             </Typography>
-            {/* {getOzonPdfData && (
-                <div className="progress">
-                    <div className="progress-bar">
-                        <label className="progress-label" htmlFor="progress">
-                            {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
-                        </label>
-                        <LinearProgress variant="determinate" value={percentOzon} />
-                    </div>
-                </div>
-            )} */}
             <div className="card">
                 <div className="left-block">
                     <div className="card-button-wrapper">
@@ -341,7 +349,7 @@ export const YandexFields = (): ReactElement => {
                                         accept="application/pdf"
                                         onChange={handlePDFSelected}
                                         id="PDF_Yandex"
-                                        disabled={disableOzon || loading}
+                                        disabled={disableYandex || loading}
                                     />
                                 </Button>
                             </>
@@ -364,7 +372,7 @@ export const YandexFields = (): ReactElement => {
                                     <>
                                         <p className="status-text">Выберите файл</p>
                                     </>
-                                ) : disableOzon ? (
+                                ) : disableYandex ? (
                                     <>
                                         <p className="status-text">В процессе</p>
                                         <LinearIndeterminate />
@@ -396,7 +404,7 @@ export const YandexFields = (): ReactElement => {
                                     <>
                                         <p className="status-text">Выберите файл</p>
                                     </>
-                                ) : !getOzonPdfData ? (
+                                ) : !getYandexPdfData ? (
                                     <>
                                         <p className="status-text">В процессе</p>
                                         <LinearIndeterminate />
@@ -414,7 +422,7 @@ export const YandexFields = (): ReactElement => {
                                 )}
                             </p>
                         </div>
-                        {fileLink.length !== 0 && finalPDFOzon && (
+                        {fileLink.length !== 0 && finalPDFYandex && (
                             <div className="card-preview-file">
                                 <FontAwesomeIcon
                                     style={{
@@ -432,7 +440,7 @@ export const YandexFields = (): ReactElement => {
                                 </div>
                             </div>
                         )}
-                        {getOzonPdfData && !finalPDFOzon && (
+                        {getYandexPdfData && !finalPDFYandex && (
                             <div className="generate-file-container">
                                 <p className="generate-file-text">Генерируем PDF.....</p>
                                 <LinearIndeterminate />
@@ -445,7 +453,7 @@ export const YandexFields = (): ReactElement => {
                 <Button
                     variant="contained"
                     className="custom-download-button"
-                    disabled={!finalPDFOzon}
+                    disabled={!finalPDFYandex}
                     type="button"
                     onClick={onClick}
                 >

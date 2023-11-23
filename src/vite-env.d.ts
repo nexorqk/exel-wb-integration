@@ -1,3 +1,3 @@
 /// <reference types="vite/client" />
 
-declare module 'react-pdf';
+// declare module 'react-pdf';

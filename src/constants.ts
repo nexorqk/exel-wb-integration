@@ -15,7 +15,8 @@ export const pageSizeYandex = {
 
 export const FONT_URL = 'https://pdf-lib.js.org/assets/ubuntu/Ubuntu-R.ttf';
 
-export enum Multiplier {
+export const enum Multiplier {
     WILDBERRIES = 2,
     OZON = 1,
+    Yandex = 1,
 }

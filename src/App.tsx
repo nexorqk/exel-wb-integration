@@ -3,11 +3,17 @@ import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { pdfjs } from 'react-pdf';
-import { resizePdfPages, wrapText, drawTextOnPages, setWorkerSrc, getPDFText, generateWBText } from './utils';
+import {
+    resizePdfPages,
+    wrapText,
+    drawTextOnPages,
+    setWorkerSrc,
+    getPDFText,
+    generateWBText,
+} from './utils';
 import { FONT_URL, Multiplier } from './constants';
 import { OzonFields } from './components/ozon-fields';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from './types/common';
-import { YandexFields } from './components/yandex-fields';
 import {
     Box,
     Button,
@@ -22,6 +28,7 @@ import {
     Typography,
 } from '@mui/material';
 import PopupState, { bindPopper, bindToggle } from 'material-ui-popup-state';
+import { YandexFields } from './components/yandex/yandex-fields';
 
 export const App = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -54,7 +61,10 @@ export const App = (): ReactElement => {
                 const mergedPDF = await PDFDocument.create();
 
                 for (let i = 0; i < finalPDFList.length; i++) {
-                    const copiedPages = await mergedPDF.copyPages(finalPDFList[i], finalPDFList[i].getPageIndices());
+                    const copiedPages = await mergedPDF.copyPages(
+                        finalPDFList[i],
+                        finalPDFList[i].getPageIndices(),
+                    );
                     copiedPages.forEach(page => mergedPDF.addPage(page));
                 }
                 return mergedPDF;
@@ -138,9 +148,9 @@ export const App = (): ReactElement => {
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const prepareIndices = () => {
-            const allPages = [];
+            const allPages: number[] = [];
 
-            for (let i = 0; i < pageCount.length; i++) {
+            for (let i: number = 0; i < pageCount.length; i++) {
                 allPages.push(i);
             }
             return allPages;
@@ -162,7 +172,11 @@ export const App = (): ReactElement => {
                 return product.id === id;
             });
 
-            return { id: equalProduct?.id, label: equalProduct?.label, article: equalProduct?.article };
+            return {
+                id: equalProduct?.id,
+                label: equalProduct?.label,
+                article: equalProduct?.article,
+            };
         });
 
         const productGroups = getSortedArray(getSortedProductList as any);
@@ -221,7 +235,9 @@ export const App = (): ReactElement => {
                     article: el['Артикул продавца'] ?? el[articleName[13]],
                 }));
 
-                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                const getSortedArr: ProductList = getArgs.sort(
+                    (a, b) => Number(a.id) - Number(b.id),
+                );
 
                 setProductList(getSortedArr);
                 setDisable(false);
@@ -246,7 +262,12 @@ export const App = (): ReactElement => {
                         pdfDoc.registerFontkit(fontkit);
                         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
                         const timesRomanFont = await pdfDoc.embedFont(fontBytes);
-                        await generateFinalPDF(pdfDoc, reader.result as ArrayBuffer, timesRomanFont, Multiplier.OZON);
+                        await generateFinalPDF(
+                            pdfDoc,
+                            reader.result as ArrayBuffer,
+                            timesRomanFont,
+                            Multiplier.OZON,
+                        );
                     };
                 };
                 await onLoad();
@@ -302,7 +323,10 @@ export const App = (): ReactElement => {
                                         <Paper sx={{ color: '#dc143c', fontSize: 20, p: 4 }}>
                                             <ul style={{ listStyle: 'decimal' }}>
                                                 <li>Загрузите Excel-файл</li>
-                                                <li>Загрузите PDF-файл (выберите несколько через ctrl)</li>
+                                                <li>
+                                                    Загрузите PDF-файл (выберите несколько через
+                                                    ctrl)
+                                                </li>
                                                 <li>Дождитесь загрузки</li>
                                                 <li>Нажмите на кнопку Скачать</li>
                                             </ul>
@@ -340,7 +364,12 @@ export const App = (): ReactElement => {
                                     />
                                 </label>
                             </Tooltip>
-                            <Button variant="contained" disabled={!mergedPDF} type="button" onClick={() => onClick()}>
+                            <Button
+                                variant="contained"
+                                disabled={!mergedPDF}
+                                type="button"
+                                onClick={() => onClick()}
+                            >
                                 Скачать
                             </Button>
                         </Box>
@@ -348,7 +377,9 @@ export const App = (): ReactElement => {
                         {!disable && (
                             <div className="excel-downloaded">
                                 <div className="excel-downloaded-bar">
-                                    <p className="excel-downloaded-label">Excel файл был загружен!</p>
+                                    <p className="excel-downloaded-label">
+                                        Excel файл был загружен!
+                                    </p>
                                 </div>
                             </div>
                         )}

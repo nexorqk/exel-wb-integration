@@ -23,10 +23,10 @@ import { FONT_URL, Multiplier, pageSizeYandex } from '../../constants';
 import { initialState, yandexReducer } from './reducer';
 import { ExcelRow, ProductList, ProductListItem } from '../../types/common';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
+import FontAwesomeIcon from '../FontAwesomeIcon';
 
 const LinearIndeterminate = () => {
     return (
@@ -304,7 +304,7 @@ export const YandexFields = (): ReactElement => {
                                 className="custom-upload-button"
                                 accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 rootNode="label"
-                                id={'XLSX'}
+                                id='XLSX'
                             />
                         </div>
                         <div className="custom-pdf-button">
@@ -360,12 +360,10 @@ export const YandexFields = (): ReactElement => {
                             {fileLink.length !== 0 && finalPDFYandex && (
                                 <div className="card-preview-file">
                                     <FontAwesomeIcon
-                                        style={{
-                                            width: 60,
-                                            height: 60,
-                                            color: '#A3B763',
-                                        }}
                                         icon={faBoxOpen}
+                                        width={60}
+                                        height={60}
+                                        color="#A3B763"
                                     />
                                     <div className="card-preview-file_info">
                                         <Typography fontWeight="bold">Предпросмотр: </Typography>

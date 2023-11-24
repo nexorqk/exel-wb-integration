@@ -1,6 +1,6 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { Box, LinearProgress } from '@mui/material';
+import FontAwesomeIcon from '../FontAwesomeIcon';
 
 interface UploadedFileStatus {
     size: {
@@ -34,15 +34,15 @@ const UploadedFileStatus = ({
     fileIcon,
     className,
 }: UploadedFileStatus) => {
+    const { width, heigth } = size;
+
     return (
         <div className={className}>
             <FontAwesomeIcon
-                style={{
-                    width: size.width,
-                    height: size.heigth,
-                    color: isFileLoaded ? '#A3B763' : 'grey',
-                }}
                 icon={fileIcon}
+                width={width}
+                height={heigth}
+                color={isFileLoaded ? '#A3B763' : 'rgba(0, 0, 0, 0.12)'}
             />
             <div className="file-uploading-status">
                 {!isFileLoaded ? (

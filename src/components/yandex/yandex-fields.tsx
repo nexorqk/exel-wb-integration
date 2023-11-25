@@ -16,10 +16,14 @@ import {
     compareAndDelete,
     convertBytes,
     getSortedArray,
+    sortDuplicatedOrders,
+    prepareIndices,
+    processPdfPages,
+    createPagesGroup,
 } from '../../utils';
 
 import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
-import { FONT_URL, Multiplier, pageSizeYandex } from '../../constants';
+import { FONT_URL, Multiplier, YANDEX_ITEMS_KEY, pageSizeYandex } from '../../constants';
 
 import { initialState, yandexReducer } from './reducer';
 import { ExcelRow, ProductList, ProductListItem } from '../../types/common';
@@ -60,55 +64,6 @@ export const YandexFields = (): ReactElement => {
 
     const pageIds: { id: string }[] = [];
 
-    const MAX_CONCURRENT_PAGES = 4;
-    const START_PAGE = 1;
-
-    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
-        const doc = await pdfjs.getDocument(file).promise;
-
-        const pagesToProcess = Array.from(
-            { length: endPage - START_PAGE + 1 },
-            (_, i) => START_PAGE + i,
-        );
-
-        const processPage = async (pageNumber: number) => {
-            const page = await doc.getPage(pageNumber);
-            const item = await page.getTextContent();
-            const oneArgs: { id: string } = { id: item.items[0].str };
-            pageIds.push(oneArgs);
-
-            page.cleanup();
-        };
-
-        const promises: Promise<void>[] = [];
-        for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
-            const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
-            const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
-            promises.push(...pagePromises);
-            await Promise.all(pagePromises);
-        }
-
-        doc.cleanup();
-
-        await Promise.all(promises);
-    };
-
-    const sortDuplicatedOrders = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
-                if (!acc[item.id])
-                    acc[item.id] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.id].label = [...acc[item.id].label, item.label];
-                return acc;
-            }, {} as Record<string, ProductListItem>),
-        );
-
-        return result;
-    };
-
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
         pdfBuffer: ArrayBuffer,
@@ -122,17 +77,9 @@ export const YandexFields = (): ReactElement => {
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
-        const prepareIndices = () => {
-            const allPages = [];
+        const getAllIndices = prepareIndices(pageCount);
 
-            for (let i = 0; i < pageCount.length; i++) {
-                allPages.push(i);
-            }
-
-            return allPages;
-        };
-
-        await processPdfPages(pdfBuffer, countPage);
+        await processPdfPages(pdfBuffer, pageIds, countPage, YANDEX_ITEMS_KEY);
         setGetYandexPdfData(true);
         const uniqueOrders = getDuplicatesOrUniques(yandexProductList);
         const comparedArray = compareAndDelete(uniqueOrders, pageIds);
@@ -145,7 +92,7 @@ export const YandexFields = (): ReactElement => {
         const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
+        const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         sortedArr.forEach(async group => {
             finalPdf.addPage();
@@ -156,18 +103,10 @@ export const YandexFields = (): ReactElement => {
 
             const text = wrapText(generateYandexText(group), 200, font, 18).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
+
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);
-            for (let i = 0; i < pageCount.length; i++) {
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                    pagesForGroup.push(copiedPages[i]);
-                } else {
-                    for (let j = 0; j < pageIds[i].id.length; j++) {
-                        if (group.id[j] === pageIds[i].id) {
-                            pagesForGroup.push(copiedPages[i]);
-                        }
-                    }
-                }
-            }
+
+            createPagesGroup(group, pageCount, pagesForGroup, copiedPages, pageIds);
 
             pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {

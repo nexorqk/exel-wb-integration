@@ -20,3 +20,9 @@ export const enum Multiplier {
     OZON = 1,
     Yandex = 1,
 }
+
+export const MAX_CONCURRENT_PAGES = 4;
+export const START_PAGE = 1;
+
+export const OZON_ITEMS_KEY = 4;
+export const YANDEX_ITEMS_KEY = 0;

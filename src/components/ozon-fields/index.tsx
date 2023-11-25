@@ -11,12 +11,15 @@ import {
     generateOzonText,
     getDuplicatesOrUniques,
     convertBytes,
-    compareAndDelete,
     dateTimeForFileName,
     getSortedArray,
+    sortDuplicatedOrders,
+    prepareIndices,
+    processPdfPages,
+    createPagesGroup,
 } from '../../utils';
 import '../../App';
-import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
+import { FONT_URL, Multiplier, OZON_ITEMS_KEY, pageSizeOzon } from '../../constants';
 
 import { ProductList, ExcelRow, ProductListItem } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
@@ -46,55 +49,6 @@ export const OzonFields = (): ReactElement => {
 
     const pageIds: { id: string }[] = [];
 
-    const MAX_CONCURRENT_PAGES = 4;
-    const START_PAGE = 1;
-
-    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
-        const doc = await pdfjs.getDocument(file).promise;
-
-        const pagesToProcess = Array.from(
-            { length: endPage - START_PAGE + 1 },
-            (_, i) => START_PAGE + i,
-        );
-
-        const processPage = async (pageNumber: number) => {
-            const page = await doc.getPage(pageNumber);
-            const item = await page.getTextContent();
-            const oneArgs: { id: string } = { id: item.items[4].str };
-            pageIds.push(oneArgs);
-
-            page.cleanup();
-        };
-
-        const promises: Promise<void>[] = [];
-        for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
-            const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
-            const pagePromises = chunk.map(pageNumber => processPage(pageNumber));
-            promises.push(...pagePromises);
-            await Promise.all(pagePromises);
-        }
-
-        doc.cleanup();
-
-        await Promise.all(promises);
-    };
-
-    const sortDuplicatedOrders = (productList: ProductList): ProductListItem[] => {
-        const result: ProductListItem[] = Object.values(
-            productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
-                if (!acc[item.id])
-                    acc[item.id] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
-                return acc;
-            }, {} as Record<string, ProductListItem>),
-        );
-
-        return result;
-    };
-
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
         pdfBuffer: ArrayBuffer,
@@ -108,17 +62,9 @@ export const OzonFields = (): ReactElement => {
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
-        const prepareIndices = () => {
-            const allPages = [];
+        const getAllIndices = prepareIndices(pageCount);
 
-            for (let i = 0; i < pageCount.length; i++) {
-                allPages.push(i);
-            }
-
-            return allPages;
-        };
-
-        await processPdfPages(pdfBuffer, countPage);
+        await processPdfPages(pdfBuffer, pageIds, countPage, OZON_ITEMS_KEY);
         setGetOzonPdfData(true);
 
         const uniqueOrders = getDuplicatesOrUniques(ozonProductList);
@@ -131,7 +77,7 @@ export const OzonFields = (): ReactElement => {
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
 
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
+        const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         sortedArr.forEach(async group => {
             finalPdf.addPage();
@@ -152,20 +98,7 @@ export const OzonFields = (): ReactElement => {
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
-            for (let i = 0; i < pageCount.length; i++) {
-                // @ts-ignore
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                    pagesForGroup.push(copiedPages[i]);
-                } else {
-                    // @ts-ignore
-                    for (let j = 0; j < pageIds[i].id.length; j++) {
-                        // @ts-ignore
-                        if (group.id[j] === pageIds[i].id) {
-                            pagesForGroup.push(copiedPages[i]);
-                        }
-                    }
-                }
-            }
+            createPagesGroup(group, pageCount, pagesForGroup, copiedPages, pageIds);
 
             pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {

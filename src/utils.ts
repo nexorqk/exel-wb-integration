@@ -265,3 +265,21 @@ export const convertBytes = (bytes?: number) => {
         ? Math.round(megabytes * 100) / 100 + ' MB'
         : Math.round(kilobytes * 100) / 100 + ' KB';
 };
+
+export const getSortedArray = (productList: ProductList): ProductListItem[] => {
+    const result: ProductListItem[] = Object.values(
+        productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
+            if (!acc[item.label]) {
+                acc[item.label] = {
+                    ...item,
+                };
+            } else {
+                //@ts-ignore
+                acc[item.label].id = [...acc[item.label].id, item.id];
+            }
+            return acc;
+        }, {} as Record<string, ProductListItem>),
+    );
+
+    return result;
+};

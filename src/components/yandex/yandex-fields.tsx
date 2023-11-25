@@ -15,6 +15,7 @@ import {
     dateTimeForFileName,
     compareAndDelete,
     convertBytes,
+    getSortedArray,
 } from '../../utils';
 
 import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
@@ -28,7 +29,7 @@ import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
 import FontAwesomeIcon from '../FontAwesomeIcon';
 
-const LinearIndeterminate = () => {
+export const LinearIndeterminate = () => {
     return (
         <Box sx={{ width: '100%' }}>
             <LinearProgress />
@@ -90,24 +91,6 @@ export const YandexFields = (): ReactElement => {
         doc.cleanup();
 
         await Promise.all(promises);
-    };
-
-    const getSortedArray = (productList: ProductList): ProductListItem[] => {
-        const result: ProductListItem[] = Object.values(
-            productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
-                if (!acc[item.label]) {
-                    acc[item.label] = {
-                        ...item,
-                    };
-                } else {
-                    //@ts-ignore
-                    acc[item.label].id = [...acc[item.label].id, item.id];
-                }
-                return acc;
-            }, {} as Record<string, ProductListItem>),
-        );
-
-        return result;
     };
 
     const sortDuplicatedOrders = (productList: ProductList) => {
@@ -304,7 +287,8 @@ export const YandexFields = (): ReactElement => {
                                 className="custom-upload-button"
                                 accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                                 rootNode="label"
-                                id='XLSX'
+                                id="XLSX"
+                                label="Выбрать Excel файл"
                             />
                         </div>
                         <div className="custom-pdf-button">
@@ -322,6 +306,7 @@ export const YandexFields = (): ReactElement => {
                                         accept="application/pdf"
                                         rootNode="label"
                                         id="PDF_Yandex"
+                                        label="Выбрать PDF файл"
                                     />
                                 </span>
                             </Tooltip>

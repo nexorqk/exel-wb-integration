@@ -10,6 +10,7 @@ interface UploadButton {
     id: string;
     disabled?: boolean;
     disabledButton?: boolean;
+    label: string;
 }
 
 const VisuallyHiddenInput = styled('input')({
@@ -32,6 +33,7 @@ const UploadButton = ({
     className,
     disabled,
     disabledButton,
+    label,
 }: UploadButton) => {
     return (
         <Button
@@ -41,7 +43,7 @@ const UploadButton = ({
             startIcon={<CloudUploadIcon />}
             disabled={disabledButton}
         >
-            Выбрать Excel файл
+            {label}
             <VisuallyHiddenInput
                 type="file"
                 onChange={onChange}

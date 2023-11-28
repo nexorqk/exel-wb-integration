@@ -187,15 +187,15 @@ export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont
     });
 };
 
-export const getPDFText = async (file: ArrayBuffer, number: number) => {
-    const doc = await pdfjs.getDocument(file).promise;
+export const getPDFText = async (doc: any, number: number, pageIds: { id: string }[]) => {
     const page = await doc.getPage(number);
     const test = await page.getTextContent();
     const items: TextContentItem[] = test.items;
     const item: TextContentItem | undefined = items.find(item => item.str);
     const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
 
-    return `${item?.str}${itemLast?.str}`;
+    const oneArgs: { id: string } = { id: `${item?.str}${itemLast?.str}` };
+    pageIds.push(oneArgs);
 };
 
 export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =>

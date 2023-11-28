@@ -11,6 +11,7 @@ interface UploadButton {
     disabled?: boolean;
     disabledButton?: boolean;
     label: string;
+    multiple?: boolean;
 }
 
 const VisuallyHiddenInput = styled('input')({
@@ -34,6 +35,7 @@ const UploadButton = ({
     disabled,
     disabledButton,
     label,
+    multiple = false,
 }: UploadButton) => {
     return (
         <Button
@@ -46,6 +48,7 @@ const UploadButton = ({
             {label}
             <VisuallyHiddenInput
                 type="file"
+                multiple={multiple}
                 onChange={onChange}
                 accept={accept}
                 id={id}

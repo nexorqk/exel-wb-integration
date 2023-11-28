@@ -12,8 +12,9 @@ import {
     generateWBText,
     dateTimeForFileName,
     convertBytes,
+    prepareIndices,
 } from '../../utils';
-import { FONT_URL, Multiplier } from '../../constants';
+import { FONT_URL, MAX_CONCURRENT_PAGES, Multiplier, START_PAGE } from '../../constants';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
@@ -132,6 +133,30 @@ export const WBFields = (): ReactElement => {
         return sortedArray;
     };
 
+    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
+        const doc = await pdfjs.getDocument(file).promise;
+
+        const pagesToProcess = Array.from(
+            { length: endPage - START_PAGE + 1 },
+            (_, i) => START_PAGE + i,
+        );
+
+        const promises: Promise<void>[] = [];
+
+        for (let i = 1; i <= pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
+            const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
+            const pagePromises = chunk.map(pageNumber => getPDFText(doc, pageNumber, pageIds));
+            promises.push(...pagePromises);
+            await Promise.all(pagePromises);
+        }
+
+        doc.cleanup();
+
+        await Promise.all(promises);
+    };
+
+    const pageIds: { id: string }[] = [];
+
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
         pdfBuffer: ArrayBuffer,
@@ -141,26 +166,13 @@ export const WBFields = (): ReactElement => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
+        const countPage = pdfDocument.getPageCount();
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
-        const prepareIndices = () => {
-            const allPages: number[] = [];
-
-            for (let i: number = 0; i < pageCount.length; i++) {
-                allPages.push(i);
-            }
-            return allPages;
-        };
-
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
-
-        const pageIds: { id: string }[] = [];
-        for (let index = 1; index <= pageCount.length; index++) {
-            const id = await getPDFText(pdfBuffer, index);
-
-            if (id) pageIds.push({ id: id });
-        }
+        const getAllIndices = prepareIndices(pageCount);
+        await processPdfPages(pdfBuffer, countPage);
+        const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
@@ -189,13 +201,14 @@ export const WBFields = (): ReactElement => {
             drawTextOnPages(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                    pagesForGroup.push(copiedPages[i]);
-                } else {
-                    for (let j = 0; j < group.id.length; j++) {
-                        if (group.id[j] === pageIds[i].id) {
-                            pagesForGroup.push(copiedPages[i]);
-                        }
+                if (pageIds[i]) {
+                    const currentPageId = pageIds[i].id;
+
+                    if (
+                        currentPageId === group.id ||
+                        (group.id instanceof Array && group.id.includes(currentPageId))
+                    ) {
+                        pagesForGroup.push(copiedPages[i]);
                     }
                 }
             }
@@ -362,6 +375,7 @@ export const WBFields = (): ReactElement => {
                                             rootNode="label"
                                             id="PDF_Yandex"
                                             label="Выбрать PDF файл"
+                                            multiple
                                         />
                                     </span>
                                 </Tooltip>

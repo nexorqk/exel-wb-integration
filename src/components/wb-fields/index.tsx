@@ -11,34 +11,46 @@ import {
     getPDFText,
     generateWBText,
     dateTimeForFileName,
+    convertBytes,
 } from '../../utils';
 import { FONT_URL, Multiplier } from '../../constants';
 import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
-import { Box, Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
+import UploadButton from '../UploadButton';
+import UploadedFileStatus from '../UploadedFileStatus';
+import FontAwesomeIcon from '../FontAwesomeIcon';
+import { LinearIndeterminate } from '../yandex/yandex-fields';
+import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 
 export const WBFields = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
-    const [getPdfData, setGetPdfData] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [disable, setDisable] = useState(true);
-    const [percent, setPercent] = useState(0);
-    const [finalPDF, setFinalPDF] = useState<PDFDocument>();
+    const [getWBPdfData, setGetWBPdfData] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [disableWB, setDisableWB] = useState(true);
+    const [finalPDFWB, setFinalPDFWB] = useState<PDFDocument>();
     const [mergedPDF, setMergedPDF] = useState<PDFDocument>();
     const [objectUrl, setObjectUrl] = useState('');
     const [finalPDFList, setFinalPDFList] = useState<PDFDocument[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+    const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
+    const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
+    const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
+    const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
+    const [fileLink, setFileLink] = useState('');
+    const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
+    const [isFileReady, setIsFileReady] = useState(false);
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
 
     useEffect(() => {
-        if (finalPDF) {
+        if (finalPDFWB) {
             setFinalPDFList(currentValue => {
-                return [...currentValue, finalPDF];
+                return [...currentValue, finalPDFWB];
             });
         }
-    }, [finalPDF]);
+    }, [finalPDFWB]);
 
     useEffect(() => {
         if (uploadedFiles.length === finalPDFList.length && uploadedFiles.length > 0) {
@@ -143,18 +155,16 @@ export const WBFields = (): ReactElement => {
 
         const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
 
-        const pageIds: string[] = [];
+        const pageIds: { id: string }[] = [];
         for (let index = 1; index <= pageCount.length; index++) {
             const id = await getPDFText(pdfBuffer, index);
-            const getPercent = 100 / pageCount.length;
-            setPercent(getPercent * index);
 
-            if (id) pageIds.push(id);
+            if (id) pageIds.push({ id: id });
         }
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: any) => {
-                return product.id === id;
+                return product.id === id.id;
             });
 
             return {
@@ -179,11 +189,11 @@ export const WBFields = (): ReactElement => {
             drawTextOnPages(lastPage, text, timesRomanFont);
 
             for (let i = 0; i < pageCount.length; i++) {
-                if (typeof group.id === 'string' && pageIds[i] === group.id) {
+                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                     pagesForGroup.push(copiedPages[i]);
                 } else {
                     for (let j = 0; j < group.id.length; j++) {
-                        if (group.id[j] === pageIds[i]) {
+                        if (group.id[j] === pageIds[i].id) {
                             pagesForGroup.push(copiedPages[i]);
                         }
                     }
@@ -196,16 +206,20 @@ export const WBFields = (): ReactElement => {
                 }
             });
         });
-        setFinalPDF(finalPdf);
+        setFinalPDFWB(finalPdf);
         return finalPdf;
     };
 
     const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const fileReader = new FileReader();
-        if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
+        if (e.target.files) {
+            fileReader.readAsArrayBuffer(e.target.files[0]);
+            setDownloadedXLSXFileData(e.target.files[0]);
+        }
 
         fileReader.onload = e => {
             if (e.target) {
+                setIsXLSXFileLoaded(true);
                 const bufferArray = e?.target.result;
                 const wb = XLSX.read(bufferArray, { type: 'buffer' });
                 const wsname = wb.SheetNames[0];
@@ -225,16 +239,20 @@ export const WBFields = (): ReactElement => {
                 );
 
                 setProductList(getSortedArr);
-                setDisable(false);
+                setDisableWB(false);
             }
         };
     };
 
     const handlePDFSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        setLoading(true);
+        setIsLoading(true);
 
         //@ts-ignore
         const files = Object.values(e.target.files);
+
+        if (e.target.files?.length === 1) {
+            setDownloadedPDFFileData(e.target.files[0]);
+        }
 
         if (e.target.files) {
             setUploadedFiles(files);
@@ -243,6 +261,7 @@ export const WBFields = (): ReactElement => {
                     const reader = new FileReader();
                     reader.readAsArrayBuffer(files[i]);
                     reader.onloadend = async () => {
+                        setIsPDFFileLoaded(true);
                         const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
                         pdfDoc.registerFontkit(fontkit);
                         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
@@ -258,82 +277,170 @@ export const WBFields = (): ReactElement => {
                 await onLoad();
             }
 
-            setLoading(false);
+            if (finalPDFWB && pdfBytes) {
+                const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                setObjectUrl(URL.createObjectURL(pdfBlob));
+                const fileURL = window.URL.createObjectURL(pdfBlob);
+                setFileLink(fileURL);
+            }
 
-            setGetPdfData(true);
-            setDisable(true);
+            setIsLoading(false);
+            setGetWBPdfData(true);
         }
     };
 
+    useEffect(() => {
+        const getFinalFile = async () => {
+            if (!mergedPDF) return;
+            const pdfBytes1 = await mergedPDF.save();
+            console.log('pdfBytes1 : >>', pdfBytes1);
+            setPdfBytes(pdfBytes1);
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
+            const pdfBlob = new Blob([pdfBytes1!], { type: 'application/pdf' });
+            setObjectUrl(URL.createObjectURL(pdfBlob));
+            const fileURL = window.URL.createObjectURL(pdfBlob);
+            setIsFileReady(true);
+            setFileLink(fileURL);
+        };
+
+        getFinalFile();
+    }, [mergedPDF]);
+
     const onClick = async () => {
-        if (!mergedPDF) return;
-        const pdfBytes1 = await mergedPDF.save();
-        if (objectUrl) {
-            URL.revokeObjectURL(objectUrl);
+        if (finalPDFWB && pdfBytes) {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+            }
         }
-        const pdfBlob = new Blob([pdfBytes1]);
-        setObjectUrl(URL.createObjectURL(pdfBlob));
-        const fileURL = window.URL.createObjectURL(pdfBlob);
         const alink = document.createElement('a');
-        alink.href = fileURL;
+        alink.href = fileLink;
         alink.download = `WBSampleFile_${dateTimeForFileName()}.pdf`;
         alink.click();
     };
 
-    return (
-        <Stack spacing={2}>
-            <Typography variant="h4">Wildberries Stickers:</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <label className="btn" htmlFor="XLSX-yandex">
-                    Выбрать Excel файл
-                    <input
-                        type="file"
-                        onChange={handleXLSXSelected}
-                        accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        id="XLSX-yandex"
-                        disabled={loading}
-                    />
-                </label>
-                <Tooltip title={disable ? <h2>Сначала загрузите EXCEL файл!</h2> : ''}>
-                    <label className="btn" htmlFor="PDF" aria-disabled>
-                        Выбрать PDF файл
-                        <input
-                            multiple
-                            type="file"
-                            onChange={handlePDFSelected}
-                            accept="application/pdf"
-                            id="PDF"
-                            disabled={disable || loading}
-                        />
-                    </label>
-                </Tooltip>
-                <Button
-                    variant="contained"
-                    disabled={!mergedPDF}
-                    type="button"
-                    onClick={() => onClick()}
-                >
-                    Скачать
-                </Button>
-            </Box>
+    const openFile = () => {
+        if (pdfBytes) {
+            open(objectUrl);
+        }
+    };
 
-            {!disable && (
-                <div className="excel-downloaded">
-                    <div className="excel-downloaded-bar">
-                        <p className="excel-downloaded-label">Excel файл был загружен!</p>
+    return (
+        <>
+            <Box sx={{ margin: '30px 0' }}>
+                <Typography variant="h4" mb={2}>
+                    Yandex Stickers:
+                </Typography>
+                <div className="card">
+                    <div className="left-block">
+                        <div className="card-button-wrapper">
+                            <div className="custom-xlsx-button">
+                                <UploadButton
+                                    onChange={handleXLSXSelected}
+                                    disabled={isLoading}
+                                    className="custom-upload-button"
+                                    accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    rootNode="label"
+                                    id="XLSX"
+                                    label="Выбрать Excel файл"
+                                />
+                            </div>
+                            <div className="custom-pdf-button">
+                                <Tooltip
+                                    title={
+                                        disableWB || isLoading ? 'Сначала выберите Excel файл' : ''
+                                    }
+                                    arrow
+                                >
+                                    <span className="button-wrapper">
+                                        <UploadButton
+                                            onChange={handlePDFSelected}
+                                            disabledButton={disableWB || isLoading}
+                                            className="custom-upload-button"
+                                            accept="application/pdf"
+                                            rootNode="label"
+                                            id="PDF_Yandex"
+                                            label="Выбрать PDF файл"
+                                        />
+                                    </span>
+                                </Tooltip>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="right-block">
+                            <div className="card-icon-wrapper">
+                                <UploadedFileStatus
+                                    size={{
+                                        width: 60,
+                                        heigth: 60,
+                                    }}
+                                    className="card-file-xlsx"
+                                    isFileLoaded={isXLSXFileLoaded}
+                                    secondCondition={disableWB}
+                                    fileName={downloadedXLSXFileData?.name}
+                                    fileSize={convertBytes(downloadedXLSXFileData?.size)}
+                                    fileType={'xlsx'}
+                                    fileIcon={faFileExcel}
+                                />
+                                <UploadedFileStatus
+                                    size={{
+                                        width: 60,
+                                        heigth: 60,
+                                    }}
+                                    className="card-file-pdf"
+                                    isFileLoaded={isPDFFileLoaded}
+                                    secondCondition={!getWBPdfData}
+                                    fileName={downloadedPDFFileData?.name}
+                                    fileSize={convertBytes(downloadedPDFFileData?.size)}
+                                    fileType="pdf"
+                                    fileIcon={faFile}
+                                />
+                                {fileLink.length !== 0 && finalPDFWB && (
+                                    <div className="card-preview-file">
+                                        <FontAwesomeIcon
+                                            icon={faBoxOpen}
+                                            width={60}
+                                            height={60}
+                                            color="#A3B763"
+                                        />
+                                        <div className="card-preview-file_info">
+                                            <Typography fontWeight="bold">
+                                                Предпросмотр:{' '}
+                                            </Typography>
+                                            <Link
+                                                onClick={openFile}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Yandex Sample PDF
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                                {getWBPdfData && !isFileReady && (
+                                    <div className="generate-file-container">
+                                        <p className="generate-file-text">Генерируем PDF.....</p>
+                                        <LinearIndeterminate />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            )}
-            {getPdfData && (
-                <div className="progress">
-                    <div className="progress-bar">
-                        <label className="progress-label" htmlFor="progress">
-                            {!mergedPDF ? 'В процессе...' : 'Готово к скачиванию!'}
-                        </label>
-                        <LinearProgress variant="determinate" value={percent} />
-                    </div>
+                <div className="download-button-container">
+                    <Button
+                        variant="contained"
+                        className="custom-download-button"
+                        disabled={!isFileReady}
+                        type="button"
+                        onClick={onClick}
+                    >
+                        Скачать
+                    </Button>
                 </div>
-            )}
-        </Stack>
+            </Box>
+        </>
     );
 };

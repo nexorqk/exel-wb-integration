@@ -193,8 +193,9 @@ export const getPDFText = async (doc: any, number: number, pageIds: { id: string
     const items: TextContentItem[] = test.items;
     const item: TextContentItem | undefined = items.find(item => item.str);
     const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
-
+    
     const oneArgs: { id: string } = { id: `${item?.str}${itemLast?.str}` };
+
     pageIds.push(oneArgs);
 };
 

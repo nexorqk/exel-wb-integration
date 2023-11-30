@@ -15,7 +15,7 @@ import {
     prepareIndices,
 } from '../../utils';
 import { FONT_URL, MAX_CONCURRENT_PAGES, Multiplier, START_PAGE } from '../../constants';
-import { ProductList, AccomulatorItem, Accomulator, ExcelRow } from '../../types/common';
+import { ProductList, AccomulatorItem, Accomulator, ExcelRow, ProductListItem } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
@@ -52,6 +52,9 @@ export const WBFields = (): ReactElement => {
             });
         }
     }, [finalPDFWB]);
+
+    console.log('finalPDFWB : >>', finalPDFWB);
+    
 
     useEffect(() => {
         if (uploadedFiles.length === finalPDFList.length && uploadedFiles.length > 0) {
@@ -101,11 +104,10 @@ export const WBFields = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map((el: { id: any; label: string }) => ({
+        const arr = productList.map((el: ProductListItem) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
-            // @ts-ignore
             article: el.article,
         }));
 
@@ -133,6 +135,8 @@ export const WBFields = (): ReactElement => {
         return sortedArray;
     };
 
+    const pageIds: { id: string }[] = [];
+
     const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
         const doc = await pdfjs.getDocument(file).promise;
 
@@ -143,9 +147,10 @@ export const WBFields = (): ReactElement => {
 
         const promises: Promise<void>[] = [];
 
-        for (let i = 1; i <= pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
+        for (let i = 0; i <= pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
             const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
             const pagePromises = chunk.map(pageNumber => getPDFText(doc, pageNumber, pageIds));
+
             promises.push(...pagePromises);
             await Promise.all(pagePromises);
         }
@@ -154,8 +159,6 @@ export const WBFields = (): ReactElement => {
 
         await Promise.all(promises);
     };
-
-    const pageIds: { id: string }[] = [];
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
@@ -171,11 +174,16 @@ export const WBFields = (): ReactElement => {
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
         const getAllIndices = prepareIndices(pageCount);
+
+        console.log('getAllIndices : >>', getAllIndices);
+
         await processPdfPages(pdfBuffer, countPage);
         const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
+        // pageIds.sort((a, b) => Number(a.id) - Number(b.id));
+
         const getSortedProductList = pageIds.map(id => {
-            const equalProduct = productList.find((product: any) => {
+            const equalProduct = productList.find((product: ProductListItem) => {
                 return product.id === id.id;
             });
 
@@ -185,6 +193,9 @@ export const WBFields = (): ReactElement => {
                 article: equalProduct?.article,
             };
         });
+
+        console.log('getSortedProductList : >>', getSortedProductList);
+        
 
         const productGroups = getSortedArray(getSortedProductList as any);
 
@@ -202,19 +213,22 @@ export const WBFields = (): ReactElement => {
 
             for (let i = 0; i < pageCount.length; i++) {
                 if (pageIds[i]) {
-                    const currentPageId = pageIds[i].id;
-
-                    if (
-                        currentPageId === group.id ||
-                        (group.id instanceof Array && group.id.includes(currentPageId))
-                    ) {
+                    if (typeof group.id === 'string' && pageIds[i].id === group.id) {
                         pagesForGroup.push(copiedPages[i]);
+                    } else {
+                        for (let j = 0; j < group.id.length; j++) {
+                            if (group.id[j] === pageIds[i].id) {
+                                pagesForGroup.push(copiedPages[i]);
+                            }
+                        }
                     }
                 }
             }
 
             pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {
+                    console.log('page : >>', page);
+                    
                     finalPdf.addPage(page);
                 }
             });
@@ -283,7 +297,7 @@ export const WBFields = (): ReactElement => {
                             pdfDoc,
                             reader.result as ArrayBuffer,
                             timesRomanFont,
-                            Multiplier.OZON,
+                            Multiplier.WILDBERRIES,
                         );
                     };
                 };
@@ -307,6 +321,7 @@ export const WBFields = (): ReactElement => {
             if (!mergedPDF) return;
             const pdfBytes1 = await mergedPDF.save();
             console.log('pdfBytes1 : >>', pdfBytes1);
+            
             setPdfBytes(pdfBytes1);
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);

@@ -13,9 +13,16 @@ import {
     dateTimeForFileName,
     convertBytes,
     prepareIndices,
+    createPagesGroup,
 } from '../../utils';
 import { FONT_URL, MAX_CONCURRENT_PAGES, Multiplier, START_PAGE } from '../../constants';
-import { ProductList, AccomulatorItem, Accomulator, ExcelRow, ProductListItem } from '../../types/common';
+import {
+    ProductList,
+    AccomulatorItem,
+    Accomulator,
+    ExcelRow,
+    ProductListItem,
+} from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
@@ -52,9 +59,6 @@ export const WBFields = (): ReactElement => {
             });
         }
     }, [finalPDFWB]);
-
-    console.log('finalPDFWB : >>', finalPDFWB);
-    
 
     useEffect(() => {
         if (uploadedFiles.length === finalPDFList.length && uploadedFiles.length > 0) {
@@ -135,9 +139,11 @@ export const WBFields = (): ReactElement => {
         return sortedArray;
     };
 
-    const pageIds: { id: string }[] = [];
-
-    const processPdfPages = async (file: ArrayBuffer, endPage: number) => {
+    const processPdfPages = async (
+        file: ArrayBuffer,
+        endPage: number,
+        pageIds: { id: string }[],
+    ) => {
         const doc = await pdfjs.getDocument(file).promise;
 
         const pagesToProcess = Array.from(
@@ -175,12 +181,10 @@ export const WBFields = (): ReactElement => {
 
         const getAllIndices = prepareIndices(pageCount);
 
-        console.log('getAllIndices : >>', getAllIndices);
+        const pageIds: { id: string }[] = [];
 
-        await processPdfPages(pdfBuffer, countPage);
+        await processPdfPages(pdfBuffer, countPage, pageIds);
         const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
-
-        // pageIds.sort((a, b) => Number(a.id) - Number(b.id));
 
         const getSortedProductList = pageIds.map(id => {
             const equalProduct = productList.find((product: ProductListItem) => {
@@ -193,9 +197,6 @@ export const WBFields = (): ReactElement => {
                 article: equalProduct?.article,
             };
         });
-
-        console.log('getSortedProductList : >>', getSortedProductList);
-        
 
         const productGroups = getSortedArray(getSortedProductList as any);
 
@@ -210,25 +211,11 @@ export const WBFields = (): ReactElement => {
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPages(lastPage, text, timesRomanFont);
-
-            for (let i = 0; i < pageCount.length; i++) {
-                if (pageIds[i]) {
-                    if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                        pagesForGroup.push(copiedPages[i]);
-                    } else {
-                        for (let j = 0; j < group.id.length; j++) {
-                            if (group.id[j] === pageIds[i].id) {
-                                pagesForGroup.push(copiedPages[i]);
-                            }
-                        }
-                    }
-                }
-            }
+            //@ts-ignore
+            createPagesGroup(group, pageCount, pagesForGroup, copiedPages, pageIds);
 
             pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {
-                    console.log('page : >>', page);
-                    
                     finalPdf.addPage(page);
                 }
             });
@@ -320,8 +307,7 @@ export const WBFields = (): ReactElement => {
         const getFinalFile = async () => {
             if (!mergedPDF) return;
             const pdfBytes1 = await mergedPDF.save();
-            console.log('pdfBytes1 : >>', pdfBytes1);
-            
+
             setPdfBytes(pdfBytes1);
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);

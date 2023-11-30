@@ -15,5 +15,6 @@ module.exports = {
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-duplicate-enum-values': 'warn',
         '@typescript-eslint/no-unused-vars': 'warn',
+        "react-hooks/exhaustive-deps": 'off'
     },
 };

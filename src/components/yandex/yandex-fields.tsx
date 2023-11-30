@@ -26,12 +26,13 @@ import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/mat
 import { FONT_URL, Multiplier, YANDEX_ITEMS_KEY, pageSizeYandex } from '../../constants';
 
 import { initialState, yandexReducer } from './reducer';
-import { ExcelRow, ProductList, ProductListItem } from '../../types/common';
+import { ExcelRow, PageID, ProductList, YandexProductListItem } from '../../types/common';
 
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
 import FontAwesomeIcon from '../FontAwesomeIcon';
+import ProgressCreationFIle from '../ProgressCreationFIle';
 
 export const LinearIndeterminate = () => {
     return (
@@ -55,6 +56,7 @@ export const YandexFields = (): ReactElement => {
     const [objectUrlYandex, setObjectUrl] = useState('');
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
+    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
 
     // const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
@@ -62,7 +64,7 @@ export const YandexFields = (): ReactElement => {
         setWorkerSrc(pdfjs);
     });
 
-    const pageIds: { id: string }[] = [];
+    const pageIds: PageID[] = [];
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
@@ -91,7 +93,7 @@ export const YandexFields = (): ReactElement => {
         const sortedSimpleOrders = getSortedArray(simpleOrders);
         const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
 
-        const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
+        const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders] as YandexProductListItem[];
         const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         sortedArr.forEach(async group => {
@@ -298,10 +300,7 @@ export const YandexFields = (): ReactElement => {
                                 </div>
                             )}
                             {getYandexPdfData && !finalPDFYandex && (
-                                <div className="generate-file-container">
-                                    <p className="generate-file-text">Генерируем PDF.....</p>
-                                    <LinearIndeterminate />
-                                </div>
+                                <ProgressCreationFIle statusText={generateStatusText}/>
                             )}
                         </div>
                     </div>

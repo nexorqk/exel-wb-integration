@@ -22,13 +22,15 @@ import {
     Accomulator,
     ExcelRow,
     ProductListItem,
+    ProductGroup,
+    PageID,
 } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
 import FontAwesomeIcon from '../FontAwesomeIcon';
-import { LinearIndeterminate } from '../yandex/yandex-fields';
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import ProgressCreationFIle from '../ProgressCreationFIle';
 
 export const WBFields = (): ReactElement => {
     const [productList, setProductList] = useState<ProductList>([]);
@@ -47,6 +49,7 @@ export const WBFields = (): ReactElement => {
     const [fileLink, setFileLink] = useState('');
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [isFileReady, setIsFileReady] = useState(false);
+    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
@@ -82,7 +85,7 @@ export const WBFields = (): ReactElement => {
         }
     }, [finalPDFList]);
 
-    const getSortedArray = (productList: ProductList) => {
+    const getSortedArray = (productList: ProductGroup[]) => {
         const getCountOrder = (text: string) => {
             const splitText = text.split(' ');
             const bl = splitText.includes('упаковок');
@@ -108,7 +111,7 @@ export const WBFields = (): ReactElement => {
             return 1;
         };
 
-        const arr = productList.map((el: ProductListItem) => ({
+        const arr = productList.map((el: ProductGroup) => ({
             id: el.id,
             label: el.label,
             count: getCountOrder(el.label),
@@ -139,11 +142,7 @@ export const WBFields = (): ReactElement => {
         return sortedArray;
     };
 
-    const processPdfPages = async (
-        file: ArrayBuffer,
-        endPage: number,
-        pageIds: { id: string }[],
-    ) => {
+    const processPdfPages = async (file: ArrayBuffer, endPage: number, pageIds: PageID[]) => {
         const doc = await pdfjs.getDocument(file).promise;
 
         const pagesToProcess = Array.from(
@@ -181,7 +180,7 @@ export const WBFields = (): ReactElement => {
 
         const getAllIndices = prepareIndices(pageCount);
 
-        const pageIds: { id: string }[] = [];
+        const pageIds: PageID[] = [];
 
         await processPdfPages(pdfBuffer, countPage, pageIds);
         const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
@@ -192,6 +191,7 @@ export const WBFields = (): ReactElement => {
             });
 
             return {
+                ...equalProduct,
                 id: equalProduct?.id,
                 label: equalProduct?.label,
                 article: equalProduct?.article,
@@ -211,7 +211,6 @@ export const WBFields = (): ReactElement => {
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPages(lastPage, text, timesRomanFont);
-            //@ts-ignore
             createPagesGroup(group, pageCount, pagesForGroup, copiedPages, pageIds);
 
             pagesForGroup.forEach(page => {
@@ -344,7 +343,7 @@ export const WBFields = (): ReactElement => {
         <>
             <Box sx={{ margin: '30px 0' }}>
                 <Typography variant="h4" mb={2}>
-                    Yandex Stickers:
+                    Wildberries Stickers:
                 </Typography>
                 <div className="card">
                     <div className="left-block">
@@ -429,16 +428,13 @@ export const WBFields = (): ReactElement => {
                                                 target="_blank"
                                                 rel="noreferrer"
                                             >
-                                                Yandex Sample PDF
+                                                WB Sample PDF
                                             </Link>
                                         </div>
                                     </div>
                                 )}
                                 {getWBPdfData && !isFileReady && (
-                                    <div className="generate-file-container">
-                                        <p className="generate-file-text">Генерируем PDF.....</p>
-                                        <LinearIndeterminate />
-                                    </div>
+                                    <ProgressCreationFIle statusText={generateStatusText} />
                                 )}
                             </div>
                         </div>

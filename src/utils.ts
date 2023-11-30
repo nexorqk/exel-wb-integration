@@ -1,4 +1,12 @@
-import { ProductList, ProductListItem, TextContentItem } from './types/common';
+import {
+    PageID,
+    PageSize,
+    ProductGroup,
+    ProductList,
+    ProductListItem,
+    TextContentItem,
+    YandexProductListItem,
+} from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
 import { MAX_CONCURRENT_PAGES, START_PAGE, pageSize } from './constants';
 import { pdfjs } from 'react-pdf';
@@ -27,10 +35,10 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
-export const generateWBText = (group: any) => {
+export const generateWBText = (group: ProductGroup) => {
     const { text, article } = group;
 
-    const [ARTICLE_1, ARTICLE_2] = [article.substring(0, 25), article.substring(25)];
+    const [ARTICLE_1, ARTICLE_2] = [article?.substring(0, 25), article?.substring(25)];
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2}`;
 
@@ -69,7 +77,7 @@ export const generateOzonText = (
     ${articleIndentions}`;
 };
 
-export const generateYandexText = (group: any) => {
+export const generateYandexText = (group: YandexProductListItem) => {
     const { id, count, label, sku } = group;
 
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
@@ -79,10 +87,12 @@ export const generateYandexText = (group: any) => {
         sku.substring(48),
     ];
 
+    const joinedLabel = label.split('').join('\n\n');
+
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
 
     if (typeof id === 'string' && typeof label === 'object') {
-        return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
+        return `По ${count} шт.\n ${joinedLabel} ${articleIndentions}`;
     }
 
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
@@ -116,7 +126,10 @@ export const resizePdfPages = (pages: PDFPage[]) => {
     });
 };
 
-export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
+export const resizeOzonPdfPages = (
+    pages: PDFPage[],
+    pageSizeOzon: PageSize,
+) => {
     const new_size = pageSizeOzon;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -135,7 +148,10 @@ export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
     });
 };
 
-export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
+export const resizeYandexPdfPages = (
+    pages: PDFPage[],
+    pageSizeYandex: PageSize,
+) => {
     const new_size = pageSizeYandex;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -187,14 +203,14 @@ export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont
     });
 };
 
-export const getPDFText = async (doc: any, number: number, pageIds: { id: string }[]) => {
+export const getPDFText = async (doc: any, number: number, pageIds: PageID[]) => {
     const page = await doc.getPage(number);
     const test = await page.getTextContent();
     const items: TextContentItem[] = test.items;
     const item: TextContentItem | undefined = items.find(item => item.str);
     const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
-    
-    const oneArgs: { id: string } = { id: `${item?.str}${itemLast?.str}` };
+
+    const oneArgs: PageID = { id: `${item?.str}${itemLast?.str}` };
 
     pageIds.push(oneArgs);
 };
@@ -247,8 +263,8 @@ export const dateTimeForFileName = (): string => {
     return currentDate;
 };
 
-export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
-    const array = pageIds.map((el: { id: any }) => el.id);
+export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: PageID[]) => {
+    const array = pageIds.map((el: PageID) => el.id);
 
     const newArray = xlsIds.filter(obj => array.includes(obj.id));
 
@@ -317,13 +333,13 @@ export const prepareIndices = (pageCount: PDFPage[]): number[] => {
 
 export const getAllProductsId = async (
     doc: any,
-    pageIds: { id: string }[],
+    pageIds: PageID[],
     pageNumber: number,
     itemKey: number,
 ) => {
     const page = await doc.getPage(pageNumber);
     const item = await page.getTextContent();
-    const oneArgs: { id: string } = { id: item.items[itemKey].str };
+    const oneArgs: PageID = { id: item.items[itemKey].str };
     pageIds.push(oneArgs);
 
     page.cleanup();
@@ -331,7 +347,7 @@ export const getAllProductsId = async (
 
 export const processPdfPages = async (
     file: ArrayBuffer,
-    pageIds: { id: string }[],
+    pageIds: PageID[],
     endPage: number,
     itemKey: number,
 ) => {
@@ -355,21 +371,18 @@ export const processPdfPages = async (
     await Promise.all(promises);
 };
 
-export const createPagesGroup = (
-    group: ProductListItem,
+export const createPagesGroup = <T extends { id: string | string[] }>(
+    group: T,
     pageCount: PDFPage[],
     pagesForGroup: PDFPage[],
     copiedPages: PDFPage[],
-    pageIds: { id: string }[],
+    pageIds: PageID[],
 ) => {
     for (let i = 0; i < pageCount.length; i++) {
-        // @ts-ignore
         if (typeof group.id === 'string' && pageIds[i].id === group.id) {
             pagesForGroup.push(copiedPages[i]);
         } else {
-            // @ts-ignore
             for (let j = 0; j < pageIds[i].id.length; j++) {
-                // @ts-ignore
                 if (group.id[j] === pageIds[i].id) {
                     pagesForGroup.push(copiedPages[i]);
                 }

@@ -21,13 +21,13 @@ import {
 import '../../App';
 import { FONT_URL, Multiplier, OZON_ITEMS_KEY, pageSizeOzon } from '../../constants';
 
-import { ProductList, ExcelRow, ProductListItem } from '../../types/common';
+import { ProductList, ExcelRow, ProductListItem, PageID } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
 import UploadedFileStatus from '../UploadedFileStatus';
-import { LinearIndeterminate } from '../yandex/yandex-fields';
 import FontAwesomeIcon from '../FontAwesomeIcon';
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import ProgressCreationFIle from '../ProgressCreationFIle';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
@@ -42,12 +42,13 @@ export const OzonFields = (): ReactElement => {
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
     const [objectUrlOzon, setObjectUrl] = useState('');
+    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
 
-    const pageIds: { id: string }[] = [];
+    const pageIds: PageID[] = [];
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
@@ -292,16 +293,13 @@ export const OzonFields = (): ReactElement => {
                                                 target="_blank"
                                                 rel="noreferrer"
                                             >
-                                                Yandex Sample PDF
+                                                Ozon Sample PDF
                                             </Link>
                                         </div>
                                     </div>
                                 )}
                                 {getOzonPdfData && !finalPDFOzon && (
-                                    <div className="generate-file-container">
-                                        <p className="generate-file-text">Генерируем PDF.....</p>
-                                        <LinearIndeterminate />
-                                    </div>
+                                    <ProgressCreationFIle statusText={generateStatusText} />
                                 )}
                             </div>
                         </div>

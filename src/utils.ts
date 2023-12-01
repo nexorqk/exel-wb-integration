@@ -1,6 +1,14 @@
-import { ProductList, ProductListItem, TextContentItem } from './types/common';
+import {
+    PageID,
+    PageSize,
+    ProductGroup,
+    ProductList,
+    ProductListItem,
+    TextContentItem,
+    YandexProductListItem,
+} from './types/common';
 import { PDFFont, PDFPage, rgb } from 'pdf-lib';
-import { pageSize } from './constants';
+import { MAX_CONCURRENT_PAGES, START_PAGE, pageSize } from './constants';
 import { pdfjs } from 'react-pdf';
 
 export const setWorkerSrc = (data: any) => {
@@ -27,10 +35,10 @@ export const wrapText = (text: string, width: number, font: PDFFont, fontSize: n
     return result;
 };
 
-export const generateWBText = (group: any) => {
+export const generateWBText = (group: ProductGroup) => {
     const { text, article } = group;
 
-    const [ARTICLE_1, ARTICLE_2] = [article.substring(0, 25), article.substring(25)];
+    const [ARTICLE_1, ARTICLE_2] = [article?.substring(0, 25), article?.substring(25)];
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2}`;
 
@@ -39,7 +47,12 @@ export const generateWBText = (group: any) => {
     ${articleIndentions}`;
 };
 
-export const generateOzonText = (label: string | string[], count: number, id: string, article: string) => {
+export const generateOzonText = (
+    label: string | string[],
+    count: number,
+    id: string,
+    article: string,
+) => {
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
         article.substring(0, 10),
         article.substring(12, 24),
@@ -64,7 +77,7 @@ export const generateOzonText = (label: string | string[], count: number, id: st
     ${articleIndentions}`;
 };
 
-export const generateYandexText = (group: any) => {
+export const generateYandexText = (group: YandexProductListItem) => {
     const { id, count, label, sku } = group;
 
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
@@ -74,10 +87,12 @@ export const generateYandexText = (group: any) => {
         sku.substring(48),
     ];
 
+    const joinedLabel = label.split('').join('\n\n');
+
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
 
     if (typeof id === 'string' && typeof label === 'object') {
-        return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
+        return `По ${count} шт.\n ${joinedLabel} ${articleIndentions}`;
     }
 
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
@@ -111,7 +126,7 @@ export const resizePdfPages = (pages: PDFPage[]) => {
     });
 };
 
-export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
+export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: PageSize) => {
     const new_size = pageSizeOzon;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -130,7 +145,7 @@ export const resizeOzonPdfPages = (pages: PDFPage[], pageSizeOzon: any) => {
     });
 };
 
-export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: any) => {
+export const resizeYandexPdfPages = (pages: PDFPage[], pageSizeYandex: PageSize) => {
     const new_size = pageSizeYandex;
     const new_size_ratio = Math.round((new_size.width / new_size.height) * 100);
 
@@ -182,21 +197,24 @@ export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont
     });
 };
 
-export const getPDFText = async (file: ArrayBuffer, number: number) => {
-    const doc = await pdfjs.getDocument(file).promise;
+export const getPDFText = async (doc: any, number: number, pageIds: PageID[]) => {
     const page = await doc.getPage(number);
     const test = await page.getTextContent();
     const items: TextContentItem[] = test.items;
     const item: TextContentItem | undefined = items.find(item => item.str);
     const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
 
-    return `${item?.str}${itemLast?.str}`;
+    const oneArgs: PageID = { id: `${item?.str}${itemLast?.str}` };
+
+    pageIds.push(oneArgs);
 };
 
 export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =>
     arr.filter((item, index) => {
         arr.splice(index, 1);
-        const unique = duplicates ? arr.find(elem => elem.id === item.id) : !arr.find(elem => elem.id === item.id);
+        const unique = duplicates
+            ? arr.find(elem => elem.id === item.id)
+            : !arr.find(elem => elem.id === item.id);
         arr.splice(index, 0, item);
         return unique;
     });
@@ -239,8 +257,8 @@ export const dateTimeForFileName = (): string => {
     return currentDate;
 };
 
-export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
-    const array = pageIds.map((el: { id: any }) => el.id);
+export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: PageID[]) => {
+    const array = pageIds.map((el: PageID) => el.id);
 
     const newArray = xlsIds.filter(obj => array.includes(obj.id));
 
@@ -248,4 +266,121 @@ export const compareAndDelete = (xlsIds: ProductListItem[], pageIds: any) => {
     xlsIds.push(...newArray);
 
     return newArray;
+};
+
+export const convertBytes = (bytes?: number) => {
+    const kilobytes = bytes! / 1024;
+    const megabytes = kilobytes / 1024;
+
+    return megabytes >= 1
+        ? Math.round(megabytes * 100) / 100 + ' MB'
+        : Math.round(kilobytes * 100) / 100 + ' KB';
+};
+
+export const getSortedArray = (array: ProductListItem[]): ProductListItem[] => {
+    const result: ProductListItem[] = Object.values(
+        array.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
+            if (!acc[item.label]) {
+                acc[item.label] = {
+                    ...item,
+                };
+            } else {
+                //@ts-ignore
+                acc[item.label].id = [...acc[item.label].id, item.id];
+            }
+            return acc;
+        }, {} as Record<string, ProductListItem>),
+    );
+
+    return result;
+};
+
+export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[] => {
+    const result = Object.values(
+        productList.reduce((acc: Record<string, ProductListItem>, item: ProductListItem) => {
+            if (!acc[item.id])
+                acc[item.id] = {
+                    ...item,
+                };
+            //@ts-ignore
+            else acc[item.id].label = [...acc[item.id].label, item.label];
+            return acc;
+        }, {} as Record<string, ProductListItem>),
+    );
+
+    return result;
+};
+
+export const defineCountElements = (endPage: number) => {
+    return Array.from({ length: endPage - START_PAGE + 1 }, (_, i) => START_PAGE + i);
+};
+
+export const prepareIndices = (pageCount: PDFPage[]): number[] => {
+    const allPages = [];
+
+    for (let i = 0; i < pageCount.length; i++) {
+        allPages.push(i);
+    }
+
+    return allPages;
+};
+
+export const getAllProductsId = async (
+    doc: any,
+    pageIds: PageID[],
+    pageNumber: number,
+    itemKey: number,
+) => {
+    const page = await doc.getPage(pageNumber);
+    const item = await page.getTextContent();
+    const oneArgs: PageID = { id: item.items[itemKey].str };
+    pageIds.push(oneArgs);
+
+    page.cleanup();
+};
+
+export const processPdfPages = async (
+    file: ArrayBuffer,
+    pageIds: PageID[],
+    endPage: number,
+    itemKey: number,
+) => {
+    const doc = await pdfjs.getDocument(file).promise;
+
+    const pagesToProcess = defineCountElements(endPage);
+
+    const promises: Promise<void>[] = [];
+
+    for (let i = 0; i < pagesToProcess.length; i += MAX_CONCURRENT_PAGES) {
+        const chunk = pagesToProcess.slice(i, i + MAX_CONCURRENT_PAGES);
+        const pagePromises = chunk.map(
+            async pageNumber => await getAllProductsId(doc, pageIds, pageNumber, itemKey),
+        );
+        promises.push(...pagePromises);
+        await Promise.all(pagePromises);
+    }
+
+    doc.cleanup();
+
+    await Promise.all(promises);
+};
+
+export const createPagesGroup = <T extends { id: string | string[] }>(
+    group: T,
+    pageCount: PDFPage[],
+    pagesForGroup: PDFPage[],
+    copiedPages: PDFPage[],
+    pageIds: PageID[],
+) => {
+    for (let i = 0; i < pageCount.length; i++) {
+        if (typeof group.id === 'string' && pageIds[i].id === group.id) {
+            pagesForGroup.push(copiedPages[i]);
+        } else {
+            for (let j = 0; j < pageIds[i].id.length; j++) {
+                if (group.id[j] === pageIds[i].id) {
+                    pagesForGroup.push(copiedPages[i]);
+                }
+            }
+        }
+    }
 };

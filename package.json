@@ -12,6 +12,9 @@
     "dependencies": {
         "@emotion/react": "^11.11.1",
         "@emotion/styled": "^11.11.0",
+        "@fortawesome/free-solid-svg-icons": "^6.4.2",
+        "@fortawesome/react-fontawesome": "^0.2.0",
+        "@mui/icons-material": "^5.14.18",
         "@mui/material": "^5.14.18",
         "@pdf-lib/fontkit": "^1.1.1",
         "material-ui-popup-state": "^5.0.10",
@@ -21,6 +24,7 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-pdf": "^6.2.2",
+        "sass": "^1.69.5",
         "xlsx": "^0.18.5"
     },
     "devDependencies": {

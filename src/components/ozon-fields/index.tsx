@@ -12,72 +12,45 @@ import {
     drawTextOnPagesOzon,
     generateOzonText,
     getDuplicatesOrUniques,
+    convertBytes,
+    dateTimeForFileName,
+    getSortedArray,
+    sortDuplicatedOrders,
+    prepareIndices,
+    processPdfPages,
+    createPagesGroup,
 } from '../../utils';
 import '../../App';
-import { FONT_URL, Multiplier, pageSizeOzon } from '../../constants';
+import { FONT_URL, Multiplier, OZON_ITEMS_KEY, pageSizeOzon } from '../../constants';
 
-import { ProductList, ExcelRow } from '../../types/common';
-import { Box, Button, LinearProgress, Stack, Tooltip, Typography } from '@mui/material';
+import { ProductList, ExcelRow, ProductListItem, PageID } from '../../types/common';
+import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
+import UploadButton from '../UploadButton';
+import UploadedFileStatus from '../UploadedFileStatus';
+import FontAwesomeIcon from '../FontAwesomeIcon';
+import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
+import ProgressCreationFIle from '../ProgressCreationFIle';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
     const [getOzonPdfData, setGetOzonPdfData] = useState(false);
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
-    const [percentOzon, setPercentOzon] = useState(0);
     const [finalPDFOzon, setFinalPDFOzon] = useState<PDFDocument>();
-    const [objectUrlOzon, setObjectUrl] = useState('');
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
-    const status = percentOzon === 100 ? 'success' : 'active';
+    const [fileLink, setFileLink] = useState('');
+    const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
+    const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
+    const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
+    const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
+    const [objectUrlOzon, setObjectUrl] = useState('');
+    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
 
     useEffect(() => {
         setWorkerSrc(pdfjs);
     });
 
-    const pageIds: string[] = [];
-
-    const getOzonPDFText = async (file: ArrayBuffer, number: number) => {
-        const doc = await pdfjs.getDocument(file).promise;
-        const page = await doc.getPage(number);
-
-        const item = await page.getTextContent();
-        //@ts-ignore
-        const oneArgs = { id: item.items[4].str };
-        //@ts-ignore'
-        pageIds.push(oneArgs);
-    };
-
-    const getSortedArray = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.label])
-                    acc[item.label] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
-    };
-
-    const sortDuplicatedOrders = (productList: ProductList) => {
-        const result = Object.values(
-            productList.reduce((acc: any, item: any) => {
-                if (!acc[item.id])
-                    acc[item.id] = {
-                        ...item,
-                    };
-                //@ts-ignore
-                else acc[item.id].label = [].concat(acc[item.id].label, item.label) as string[];
-                return acc;
-            }, {}),
-        );
-
-        return result;
-    };
+    const pageIds: PageID[] = [];
 
     const generateFinalPDF = async (
         pdfDocument: PDFDocument,
@@ -88,26 +61,14 @@ export const OzonFields = (): ReactElement => {
         const finalPdf = await PDFDocument.create();
         finalPdf.registerFontkit(fontkit);
         const pageCount = pdfDocument.getPages();
+        const countPage = pdfDocument.getPageCount();
         const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
         const timesRomanFont = await finalPdf.embedFont(fontBytes);
 
-        const prepareIndices = () => {
-            const allPages = [];
+        const getAllIndices = prepareIndices(pageCount);
 
-            for (let i = 0; i < pageCount.length; i++) {
-                allPages.push(i);
-            }
-
-            return allPages;
-        };
-
-        for (let index = 1; index <= pageCount.length; index++) {
-            const id = await getOzonPDFText(pdfBuffer, index);
-
-            if (id as any) pageIds.push(id as any);
-            const getPercent = 100 / pageCount.length;
-            setPercentOzon(getPercent * index);
-        }
+        await processPdfPages(pdfBuffer, pageIds, countPage, OZON_ITEMS_KEY);
+        setGetOzonPdfData(true);
 
         const uniqueOrders = getDuplicatesOrUniques(ozonProductList);
         const duplicatedOrders = getDuplicatesOrUniques(ozonProductList, true);
@@ -119,7 +80,7 @@ export const OzonFields = (): ReactElement => {
 
         const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders];
 
-        const copiedPages = await finalPdf.copyPages(pdfDocument, prepareIndices());
+        const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         sortedArr.forEach(async group => {
             finalPdf.addPage();
@@ -128,29 +89,19 @@ export const OzonFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            // @ts-ignore
-            const { label, count, id, article } = group;
+            const { label, count, id, article } = group as ProductListItem;
 
-            //@ts-ignore
-            const text = wrapText(generateOzonText(label, count, id, article), 200, font, 20).replace(/\//gm, '');
+            const text = wrapText(
+                generateOzonText(label, count!, id, article!),
+                200,
+                font,
+                20,
+            ).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesOzon(lastPage, text, timesRomanFont);
 
-            for (let i = 0; i < pageCount.length; i++) {
-                // @ts-ignore
-                if (typeof group.id === 'string' && pageIds[i].id === group.id) {
-                    pagesForGroup.push(copiedPages[i]);
-                } else {
-                    // @ts-ignore
-                    for (let j = 0; j < pageIds[i].id.length; j++) {
-                        // @ts-ignore
-                        if (group.id[j] === pageIds[i].id) {
-                            pagesForGroup.push(copiedPages[i]);
-                        }
-                    }
-                }
-            }
+            createPagesGroup(group, pageCount, pagesForGroup, copiedPages, pageIds);
 
             pagesForGroup.forEach(page => {
                 for (let i = 0; i < multiplier; i++) {
@@ -164,10 +115,14 @@ export const OzonFields = (): ReactElement => {
 
     const handleXLSXSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
         const fileReader = new FileReader();
-        if (e.target.files) fileReader.readAsArrayBuffer(e.target.files[0]);
+        if (e.target.files) {
+            fileReader.readAsArrayBuffer(e.target.files[0]);
+            setDownloadedXLSXFileData(e.target.files[0]);
+        }
 
         fileReader.onload = e => {
             if (e.target) {
+                setIsXLSXFileLoaded(true);
                 const bufferArray = e?.target.result;
                 const wb = XLSX.read(bufferArray, { type: 'buffer' });
                 const wsname = wb.SheetNames[0];
@@ -183,7 +138,9 @@ export const OzonFields = (): ReactElement => {
                     article: el['Артикул'] ?? el[articleName[9]],
                 }));
 
-                const getSortedArr: ProductList = getArgs.sort((a, b) => Number(a.id) - Number(b.id));
+                const getSortedArr: ProductList = getArgs.sort(
+                    (a, b) => Number(a.id) - Number(b.id),
+                );
 
                 ozonSetProductList(getSortedArr);
                 setDisableOzon(false);
@@ -197,9 +154,11 @@ export const OzonFields = (): ReactElement => {
 
         if (e.target.files) {
             reader.readAsArrayBuffer(e.target.files[0]);
+            setDownloadedPDFFileData(e.target.files[0]);
         }
 
         reader.onload = async () => {
+            setIsPDFFileLoaded(true);
             const pdfDoc = await PDFDocument.load(reader.result as ArrayBuffer);
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = await fetch(FONT_URL).then(res => res.arrayBuffer());
@@ -214,10 +173,15 @@ export const OzonFields = (): ReactElement => {
             const pdfBytes = await finalPDFOzon.save();
             setFinalPDFOzon(finalPDFOzon);
             setPdfBytes(pdfBytes);
+
+            if (finalPDFOzon && pdfBytes) {
+                const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+                setObjectUrl(URL.createObjectURL(pdfBlob));
+                const fileURL = window.URL.createObjectURL(pdfBlob);
+                setFileLink(fileURL);
+            }
         };
 
-        setGetOzonPdfData(true);
-        setDisableOzon(true);
         setLoading(false);
     };
 
@@ -226,58 +190,135 @@ export const OzonFields = (): ReactElement => {
             if (objectUrlOzon) {
                 URL.revokeObjectURL(objectUrlOzon);
             }
-            const pdfBytes = await finalPDFOzon.save();
-            const pdfBlob = new Blob([pdfBytes]);
-            setObjectUrl(URL.createObjectURL(pdfBlob));
-            const fileURL = window.URL.createObjectURL(pdfBlob);
             const alink = document.createElement('a');
-            alink.href = fileURL;
-            alink.download = 'SamplePDF.pdf';
+            alink.href = fileLink;
+            alink.download = `OzonSampleFile_${dateTimeForFileName()}.pdf`;
             alink.click();
         }
     };
 
+    const openFile = () => {
+        if (pdfBytes) {
+            open(objectUrlOzon);
+        }
+    };
+
     return (
-        <Stack spacing={2}>
-            <Typography variant="h4">Ozon Stickers:</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-                <label htmlFor="XLSX_Ozon" className="btn">
-                    Выбрать CSV файл
-                </label>
-                <input type="file" onChange={handleXLSXSelected} accept=".csv" id="XLSX_Ozon" disabled={loading} />
-                <Tooltip title={disableOzon ? <h2>Сначала загрузите CSV файл!</h2> : ''}>
-                    <label htmlFor="PDF_Ozon" className="btn">
-                        Выбрать PDF файл
-                        <input
-                            type="file"
-                            onChange={handlePDFSelected}
-                            accept="application/pdf"
-                            id="PDF_Ozon"
-                            disabled={disableOzon || loading}
-                        />
-                    </label>
-                </Tooltip>
-                <Button variant="contained" disabled={!finalPDFOzon} type="button" onClick={onClick}>
-                    Скачать
-                </Button>
+        <>
+            <Box sx={{ margin: '30px 0' }}>
+                <Typography variant="h4" mb={2}>
+                    Ozon Stickers:
+                </Typography>
+                <div className="card">
+                    <div>
+                        <div className="left-block">
+                            <div className="card-button-wrapper">
+                                <div className="custom-xlsx-button">
+                                    <UploadButton
+                                        onChange={handleXLSXSelected}
+                                        disabled={loading}
+                                        className="custom-upload-button"
+                                        accept=".csv"
+                                        rootNode="label"
+                                        id="XLSX"
+                                        label="Выбрать CSV файл"
+                                    />
+                                </div>
+                                <div className="custom-pdf-button">
+                                    <Tooltip
+                                        title={
+                                            disableOzon || loading
+                                                ? 'Сначала выберите CSV файл'
+                                                : ''
+                                        }
+                                        arrow
+                                    >
+                                        <span className="button-wrapper">
+                                            <UploadButton
+                                                onChange={handlePDFSelected}
+                                                disabledButton={disableOzon || loading}
+                                                className="custom-upload-button"
+                                                accept="application/pdf"
+                                                rootNode="label"
+                                                id="PDF_Yandex"
+                                                label="Выбрать PDF файл"
+                                            />
+                                        </span>
+                                    </Tooltip>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="row">
+                        <div className="right-block">
+                            <div className="card-icon-wrapper">
+                                <UploadedFileStatus
+                                    size={{
+                                        width: 60,
+                                        heigth: 60,
+                                    }}
+                                    className="card-file-xlsx"
+                                    isFileLoaded={isXLSXFileLoaded}
+                                    secondCondition={disableOzon}
+                                    fileName={downloadedXLSXFileData?.name}
+                                    fileSize={convertBytes(downloadedXLSXFileData?.size)}
+                                    fileType="csv"
+                                    fileIcon={faFileExcel}
+                                />
+                                <UploadedFileStatus
+                                    size={{
+                                        width: 60,
+                                        heigth: 60,
+                                    }}
+                                    className="card-file-pdf"
+                                    isFileLoaded={isPDFFileLoaded}
+                                    secondCondition={!getOzonPdfData}
+                                    fileName={downloadedPDFFileData?.name}
+                                    fileSize={convertBytes(downloadedPDFFileData?.size)}
+                                    fileType="pdf"
+                                    fileIcon={faFile}
+                                />
+                                {fileLink.length !== 0 && finalPDFOzon && (
+                                    <div className="card-preview-file">
+                                        <FontAwesomeIcon
+                                            icon={faBoxOpen}
+                                            width={60}
+                                            height={60}
+                                            color="#A3B763"
+                                        />
+                                        <div className="card-preview-file_info">
+                                            <Typography fontWeight="bold">
+                                                Предпросмотр:{' '}
+                                            </Typography>
+                                            <Link
+                                                onClick={openFile}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Ozon Sample PDF
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                                {getOzonPdfData && !finalPDFOzon && (
+                                    <ProgressCreationFIle statusText={generateStatusText} />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="download-button-container">
+                    <Button
+                        variant="contained"
+                        className="custom-download-button"
+                        disabled={!finalPDFOzon}
+                        type="button"
+                        onClick={onClick}
+                    >
+                        Скачать
+                    </Button>
+                </div>
             </Box>
-            {!disableOzon && (
-                <div className="excel-downloaded">
-                    <div className="excel-downloaded-bar">
-                        <p className="excel-downloaded-label">CSV файл был загружен!</p>
-                    </div>
-                </div>
-            )}
-            {getOzonPdfData && (
-                <div className="progress">
-                    <div className="progress-bar">
-                        <label className="progress-label" htmlFor="progress">
-                            {status !== 'success' ? 'В процессе...' : 'Готово к скачиванию!'}
-                        </label>
-                        <LinearProgress variant="determinate" value={percentOzon} />
-                    </div>
-                </div>
-            )}
-        </Stack>
+        </>
     );
 };

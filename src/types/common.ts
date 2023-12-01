@@ -4,6 +4,13 @@ export interface ProductGroup {
     count: number;
     countOrder: number;
     text: string;
+    article?: string;
+}
+export interface YandexProductListItem {
+    id: string;
+    sku: string;
+    count: number;
+    label: string;
 }
 
 export interface ProductListItem {
@@ -12,6 +19,7 @@ export interface ProductListItem {
     count?: number;
     article?: string;
 }
+
 export type ProductList = ProductListItem[];
 
 export interface YandexProductListItem {
@@ -45,4 +53,13 @@ export interface TextContentItem {
     str: string;
     transform: number[];
     width: number;
+}
+
+export interface PageSize {
+    width: number;
+    height: number;
+}
+
+export interface PageID {
+    id: string;
 }

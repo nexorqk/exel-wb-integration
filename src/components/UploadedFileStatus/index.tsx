@@ -14,6 +14,7 @@ interface UploadedFileStatus {
     fileType: string;
     fileIcon: IconDefinition;
     className: string;
+    multipleFiles?: number;
 }
 
 const LinearIndeterminate = () => {
@@ -33,6 +34,7 @@ const UploadedFileStatus = ({
     fileType,
     fileIcon,
     className,
+    multipleFiles,
 }: UploadedFileStatus) => {
     const { width, heigth } = size;
 
@@ -56,7 +58,9 @@ const UploadedFileStatus = ({
                     </>
                 ) : (
                     <>
-                        <p className="status-text">Файл загружен</p>
+                        <p className="status-text">
+                            Файл загружен{multipleFiles! > 1 ? `(${multipleFiles})` : <></>}
+                        </p>
                         <p className="file-name-text">{fileName}</p>
                         <p className="file-name-text">{`${fileSize}, ${fileType}`}</p>
                     </>

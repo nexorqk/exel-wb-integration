@@ -43,7 +43,7 @@ export const WBFields = (): ReactElement => {
     const [finalPDFList, setFinalPDFList] = useState<PDFDocument[]>([]);
     const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
-    const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
+    const [downloadedPDFFileData, setDownloadedPDFFileData] = useState({ name: [], size: 0 });
     const [isXLSXFileLoaded, setIsXLSXFileLoaded] = useState(false);
     const [isPDFFileLoaded, setIsPDFFileLoaded] = useState(false);
     const [fileLink, setFileLink] = useState('');
@@ -263,10 +263,20 @@ export const WBFields = (): ReactElement => {
 
         //@ts-ignore
         const files = Object.values(e.target.files);
+        let allFilesSize: number = 0;
+        const filesNames: any = [];
 
-        if (e.target.files?.length === 1) {
-            setDownloadedPDFFileData(e.target.files[0]);
+        if (e.target.files) {
+            for (let i = 0; i < e.target.files.length; i++) {
+                allFilesSize += e.target.files[i].size;
+                filesNames.push(e.target.files[i].name);
+            }
+            setDownloadedPDFFileData({ name: filesNames, size: allFilesSize });
         }
+
+        // if (e.target.files?.length > 1) {
+        //     setDownloadedPDFFileData(e.target.files[0]);
+        // }
 
         if (e.target.files) {
             setUploadedFiles(files);
@@ -407,9 +417,10 @@ export const WBFields = (): ReactElement => {
                                     className="card-file-pdf"
                                     isFileLoaded={isPDFFileLoaded}
                                     secondCondition={!getWBPdfData}
-                                    fileName={downloadedPDFFileData?.name}
+                                    fileName={downloadedPDFFileData?.name.join(', ')}
                                     fileSize={convertBytes(downloadedPDFFileData?.size)}
                                     fileType="pdf"
+                                    multipleFiles={downloadedPDFFileData?.name.length}
                                     fileIcon={faFile}
                                 />
                                 {fileLink.length !== 0 && finalPDFWB && (

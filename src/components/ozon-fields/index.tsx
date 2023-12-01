@@ -44,7 +44,7 @@ export const OzonFields = (): ReactElement => {
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
     const [objectUrlOzon, setObjectUrl] = useState('');
-    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
+    const generateStatusText = 'Генерируем файл';
 
     useEffect(() => {
         setWorkerSrc(pdfjs);

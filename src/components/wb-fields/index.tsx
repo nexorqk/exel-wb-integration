@@ -49,7 +49,8 @@ export const WBFields = (): ReactElement => {
     const [fileLink, setFileLink] = useState('');
     const [pdfBytes, setPdfBytes] = useState<Uint8Array>();
     const [isFileReady, setIsFileReady] = useState(false);
-    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
+
+    const generateStatusText = 'Генерируем файл';
 
     useEffect(() => {
         setWorkerSrc(pdfjs);

@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useReducer, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { PDFDocument, PDFFont, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
@@ -25,7 +25,7 @@ import {
 import { Box, Button, LinearProgress, Link, Tooltip, Typography } from '@mui/material';
 import { FONT_URL, Multiplier, YANDEX_ITEMS_KEY, pageSizeYandex } from '../../constants';
 
-import { initialState, yandexReducer } from './reducer';
+// import { initialState, yandexReducer } from './reducer';
 import { ExcelRow, PageID, ProductList, YandexProductListItem } from '../../types/common';
 
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
@@ -56,7 +56,8 @@ export const YandexFields = (): ReactElement => {
     const [objectUrlYandex, setObjectUrl] = useState('');
     const [downloadedXLSXFileData, setDownloadedXLSXFileData] = useState<File>();
     const [downloadedPDFFileData, setDownloadedPDFFileData] = useState<File>();
-    const [generateStatusText, setGenerateStatusText] = useState('Генерируем файл');
+
+    const generateStatusText = 'Генерируем файл';
 
     // const [yandexData, dispatch] = useReducer(yandexReducer, initialState);
 
@@ -93,7 +94,11 @@ export const YandexFields = (): ReactElement => {
         const sortedSimpleOrders = getSortedArray(simpleOrders);
         const sortedDuplicatedOrders = sortDuplicatedOrders(duplicatedOrders);
 
-        const sortedArr = [...difficultOrders, ...sortedDuplicatedOrders, ...sortedSimpleOrders] as YandexProductListItem[];
+        const sortedArr = [
+            ...difficultOrders,
+            ...sortedDuplicatedOrders,
+            ...sortedSimpleOrders,
+        ] as YandexProductListItem[];
         const copiedPages = await finalPdf.copyPages(pdfDocument, getAllIndices);
 
         sortedArr.forEach(async group => {
@@ -300,7 +305,7 @@ export const YandexFields = (): ReactElement => {
                                 </div>
                             )}
                             {getYandexPdfData && !finalPDFYandex && (
-                                <ProgressCreationFIle statusText={generateStatusText}/>
+                                <ProgressCreationFIle statusText={generateStatusText} />
                             )}
                         </div>
                     </div>

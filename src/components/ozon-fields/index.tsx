@@ -30,7 +30,7 @@ import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icon
 import ProgressCreationFIle from '../ProgressCreationFIle';
 
 export const OzonFields = (): ReactElement => {
-    const [ozonProductList, ozonSetProductList] = useState<ProductList>([]);
+    const [ozonProductList, setOzonProductList] = useState<ProductList>([]);
     const [getOzonPdfData, setGetOzonPdfData] = useState(false);
     const [loading, setLoading] = useState(false);
     const [disableOzon, setDisableOzon] = useState(true);
@@ -140,7 +140,7 @@ export const OzonFields = (): ReactElement => {
                     (a, b) => Number(a.id) - Number(b.id),
                 );
 
-                ozonSetProductList(getSortedArr);
+                setOzonProductList(getSortedArr);
                 setDisableOzon(false);
             }
         };

@@ -55,8 +55,9 @@ export const generateOzonText = (
 ) => {
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
         article.substring(0, 10),
-        article.substring(12, 24),
-        article.substring(20),
+        article.substring(10, 20),
+        article.substring(20, 40),
+        article.substring(40),
     ];
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
@@ -286,7 +287,7 @@ export const getSortedArray = (array: ProductListItem[]): ProductListItem[] => {
                 };
             } else {
                 //@ts-ignore
-                acc[item.label].id = [...acc[item.label].id, item.id];
+                acc[item.label].id = [].concat(acc[item.label].id, item.id) as string[];
             }
             return acc;
         }, {} as Record<string, ProductListItem>),

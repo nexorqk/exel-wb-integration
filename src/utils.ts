@@ -309,7 +309,15 @@ export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[
         }, {} as Record<string, ProductListItem>),
     );
 
-    return result;
+    const data = result.map(el => ({
+        ...el,
+        //@ts-ignore
+        label: el.label.join(''),
+    }));
+
+    console.log('data : >>>', data);
+
+    return data;
 };
 
 export const defineCountElements = (endPage: number) => {

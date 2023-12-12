@@ -19,8 +19,7 @@ import {
     createPagesGroup,
 } from '../../utils';
 import '../../App';
-import { FONT_URL, Multiplier, OZON_ITEMS_KEY, pageSizeOzon } from '../../constants';
-
+import { Multiplier, OZON_ITEMS_KEY, pageSizeOzon } from '../../constants';
 import { ProductList, ExcelRow, ProductListItem, PageID } from '../../types/common';
 import { Box, Button, Link, Tooltip, Typography } from '@mui/material';
 import UploadButton from '../UploadButton';
@@ -28,6 +27,7 @@ import UploadedFileStatus from '../UploadedFileStatus';
 import FontAwesomeIcon from '../FontAwesomeIcon';
 import { faFileExcel, faFile, faBoxOpen } from '@fortawesome/free-solid-svg-icons';
 import ProgressCreationFIle from '../ProgressCreationFIle';
+import FONT_URL from '../../fonts/Ubuntu-R.ttf';
 
 export const OzonFields = (): ReactElement => {
     const [ozonProductList, setOzonProductList] = useState<ProductList>([]);

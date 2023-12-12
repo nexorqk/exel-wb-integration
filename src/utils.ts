@@ -53,27 +53,39 @@ export const generateOzonText = (
     id: string,
     article: string,
 ) => {
-    const [ARTICLE_1, ARTICLE_2, ARTICLE_3] = [
-        article.substring(0, 10),
-        article.substring(10, 20),
+    const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
+        article.substring(0, 20),
         article.substring(20, 40),
-        article.substring(40),
+        article.substring(40, 60),
+        article.substring(60),
     ];
 
-    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3}`;
+    const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
 
     if (typeof id === 'string' && typeof label === 'object') {
-        return `По ${count} шт.\n ${label.join('\n\n')} ${articleIndentions}`;
+        return `По ${count} шт.\n 
+        ${label.map((item, index) => `${index + 1}.${item}`).join('\n\n')} 
+        ${articleIndentions}`;
     }
 
     if (typeof id === 'string' && id.split(' ').length === 1 && count > 1) {
         return `Сложный заказ
         \nКоличество: ${count} шт.
-        \n${label}
+        ${
+            Array.isArray(label)
+                ? label.map((item, index) => `${index + 1}.${item}`).join('\n\n')
+                : `\n${label}`
+        }
         ${articleIndentions}
         `;
     }
-    return `\n${label}
+    console.log(label);
+    return `
+    \n${
+        Array.isArray(label)
+            ? label.map((item, index) => `${index + 1}.${item}`).join('\n\n')
+            : `\n${label}`
+    }
     \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.
     ${articleIndentions}`;
 };
@@ -180,9 +192,9 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
     page.drawText(text, {
         x: 30,
         y: 900,
-        size: 50,
+        size: 40,
         font: font,
-        lineHeight: 40,
+        lineHeight: 35,
         color: rgb(0, 0, 0),
     });
 };
@@ -314,8 +326,6 @@ export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[
         //@ts-ignore
         label: el.label.join(''),
     }));
-
-    console.log('data : >>>', data);
 
     return data;
 };

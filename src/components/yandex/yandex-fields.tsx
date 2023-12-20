@@ -108,7 +108,7 @@ export const YandexFields = (): ReactElement => {
             const finalPageCount = finalPdf.getPageCount();
             const lastPage = finalPdf.getPage(finalPageCount - 1);
 
-            const text = wrapText(generateYandexText(group), 200, font, 18).replace(/\//gm, '');
+            const text = wrapText(generateYandexText(group), 270, font, 18).replace(/\//gm, '');
             const pagesForGroup: PDFPage[] = [];
 
             drawTextOnPagesYandex(lastPage, text, timesRomanFont);

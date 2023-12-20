@@ -82,15 +82,16 @@ export const generateYandexText = (group: YandexProductListItem) => {
     const { id, count, label, sku } = group;
 
     const [ARTICLE_1, ARTICLE_2, ARTICLE_3, ARTICLE_4] = [
-        sku.substring(0, 16),
-        sku.substring(16, 32),
-        sku.substring(32, 48),
-        sku.substring(48),
+        sku.substring(0, 20),
+        sku.substring(20, 40),
+        sku.substring(40, 60),
+        sku.substring(60),
     ];
 
-    const joinedLabel = label.split('').join('\n\n');
+    const joinedLabel = label.split('').join('\n');
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
+    console.log('articleIndentions : >>>', articleIndentions);
 
     if (typeof id === 'string' && typeof label === 'object') {
         return `По ${count} шт.\n ${joinedLabel} ${articleIndentions}`;
@@ -103,6 +104,7 @@ export const generateYandexText = (group: YandexProductListItem) => {
         ${articleIndentions}
         `;
     }
+
     return `\n${label}
     \nЗаказов:${Array.isArray(id) ? id.length : 1} шт.
     ${articleIndentions}`;
@@ -188,12 +190,14 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
 };
 
 export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
+    console.log('text : >>>', text);
+
     page.drawText(text, {
         x: 30,
         y: 800,
-        size: 50,
+        size: 36,
         font: font,
-        lineHeight: 40,
+        lineHeight: 36,
         color: rgb(0, 0, 0),
     });
 };
@@ -217,6 +221,7 @@ export const getDuplicatesOrUniques = (arr: ProductList, duplicates?: boolean) =
             ? arr.find(elem => elem.id === item.id)
             : !arr.find(elem => elem.id === item.id);
         arr.splice(index, 0, item);
+
         return unique;
     });
 
@@ -304,7 +309,7 @@ export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[
                     ...item,
                 };
             //@ts-ignore
-            else acc[item.id].label = [...acc[item.id].label, item.label];
+            else acc[item.id].label = [].concat(acc[item.id].label, item.label);
             return acc;
         }, {} as Record<string, ProductListItem>),
     );
@@ -312,8 +317,9 @@ export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[
     const data = result.map(el => ({
         ...el,
         //@ts-ignore
-        label: el.label.join(''),
+        label: el.label.join('\n'),
     }));
+    console.log('data : >>>', data);
 
     console.log('data : >>>', data);
 

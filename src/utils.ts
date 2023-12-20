@@ -79,7 +79,6 @@ export const generateOzonText = (
         ${articleIndentions}
         `;
     }
-    console.log(label);
     return `
     \n${
         Array.isArray(label)
@@ -395,7 +394,7 @@ export const createPagesGroup = <T extends { id: string | string[] }>(
         if (typeof group.id === 'string' && pageIds[i].id === group.id) {
             pagesForGroup.push(copiedPages[i]);
         } else {
-            for (let j = 0; j < pageIds[i].id.length; j++) {
+            for (let j = 0; j < pageIds.length; j++) {
                 if (group.id[j] === pageIds[i].id) {
                     pagesForGroup.push(copiedPages[i]);
                 }

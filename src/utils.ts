@@ -102,7 +102,6 @@ export const generateYandexText = (group: YandexProductListItem) => {
     const joinedLabel = label.split('').join('\n');
 
     const articleIndentions = `\n${ARTICLE_1} \n${ARTICLE_2} \n${ARTICLE_3} \n${ARTICLE_4}`;
-    console.log('articleIndentions : >>>', articleIndentions);
 
     if (typeof id === 'string' && typeof label === 'object') {
         return `По ${count} шт.\n ${joinedLabel} ${articleIndentions}`;
@@ -201,7 +200,6 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
 };
 
 export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
-    console.log('text : >>>', text);
 
     page.drawText(text, {
         x: 30,
@@ -330,7 +328,6 @@ export const sortDuplicatedOrders = (productList: ProductList): ProductListItem[
         //@ts-ignore
         label: el.label.join('\n'),
     }));
-    console.log('data : >>>', data);
 
     return data;
 };

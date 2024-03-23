@@ -88,7 +88,7 @@ export const WBFields = (): ReactElement => {
 
     const getSortedArray = (productList: ProductGroup[]) => {
         const getCountOrder = (text: string) => {
-            const splitText = text.split(' ');
+            const splitText = text?.split(' ');
             const bl = splitText.includes('упаковок');
             splitText.includes('упаковка');
             splitText.includes('упаковки');

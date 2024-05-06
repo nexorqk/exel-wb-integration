@@ -1,3 +1,6 @@
+import { PDFFont, PDFPage, rgb } from 'pdf-lib';
+import { pdfjs } from 'react-pdf';
+import { MAX_CONCURRENT_PAGES, START_PAGE, pageSize } from './constants';
 import {
     PageID,
     PageSize,
@@ -7,9 +10,6 @@ import {
     TextContentItem,
     YandexProductListItem,
 } from './types/common';
-import { PDFFont, PDFPage, rgb } from 'pdf-lib';
-import { MAX_CONCURRENT_PAGES, START_PAGE, pageSize } from './constants';
-import { pdfjs } from 'react-pdf';
 
 export const setWorkerSrc = (data: any) => {
     return (data.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${data.version}/pdf.worker.min.js`);
@@ -200,7 +200,6 @@ export const drawTextOnPagesOzon = (page: PDFPage, text: string, font: PDFFont) 
 };
 
 export const drawTextOnPagesYandex = (page: PDFPage, text: string, font: PDFFont) => {
-
     page.drawText(text, {
         x: 30,
         y: 800,
@@ -217,7 +216,7 @@ export const getPDFText = async (doc: any, number: number, pageIds: PageID[]) =>
     const items: TextContentItem[] = text.items;
     // const item: TextContentItem | undefined = items.find(item => item.str);
     const itemLast: TextContentItem | undefined = items.find(item => item.str.length === 4);
-    const middleItem: TextContentItem | undefined = items.find(item => item.str.length === 7);
+    const middleItem: TextContentItem | undefined = items[2];
 
     const oneArgs: PageID = { id: `${middleItem?.str}${itemLast?.str}` };
 
